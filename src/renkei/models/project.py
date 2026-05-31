@@ -176,6 +176,66 @@ class Battery(BaseModel):
     power_kw: float = Field(gt=0)
 
 
+class Contact(BaseModel):
+    """連絡先窓口（様式１(8)）。"""
+
+    address: str | None = Field(default=None, description="住所（〒含む）")
+    company: str | None = Field(default=None, description="事業者名")
+    department: str | None = Field(default=None, description="所属")
+    person: str | None = Field(default=None, description="担当者名")
+    phone: str | None = Field(default=None, description="電話")
+    email: str | None = Field(default=None, description="e-mail")
+
+
+class JpDate(BaseModel):
+    """和暦・西暦を問わない年月日（様式の年/月/日セル用）。"""
+
+    year: int | None = None
+    month: int | None = None
+    day: int | None = None
+
+
+class Form1(BaseModel):
+    """様式１ 基本情報。"""
+
+    installer_name: str | None = Field(default=None, description="(1)発電設備等設置者名")
+    installer_kana: str | None = Field(default=None, description="(1)フリガナ")
+    same_corporation: str | None = Field(
+        default=None, description="一般送配電事業者と同一法人等の該当有無（有/無）"
+    )
+    plant_name: str | None = Field(default=None, description="(2)発電所名")
+    plant_name_kana: str | None = Field(default=None, description="(2)フリガナ")
+    site_address: str | None = Field(default=None, description="(3)設置場所の住所")
+    connect_utility: str | None = Field(default=None, description="(4)連系先")
+    existing_access: str | None = Field(default=None, description="(5)既設アクセス設備の有無")
+    change_type: str | None = Field(default=None, description="(6)発電設備等変更の有無")
+    contract_type: str | None = Field(default=None, description="(7)契約種別")
+    representative: str | None = Field(default=None, description="申込者 代表者氏名")
+    applicant_company: str | None = Field(default=None, description="申込者 事業者名")
+    applicant_address: str | None = Field(default=None, description="申込者 住所")
+    contact: Contact | None = Field(default=None, description="(8)連絡先窓口")
+
+
+class Form2(BaseModel):
+    """様式２ 発電設備等の概要（スカラ項目）。
+
+    定格出力合計・受電電力（外気温別の表）は別途対応予定のため未収録。
+    """
+
+    access_start: JpDate | None = Field(default=None, description="(1)アクセス設備運用開始希望日")
+    trial_start: JpDate | None = Field(default=None, description="(2)連系開始希望日（試運転）")
+    commercial_start: JpDate | None = Field(default=None, description="(3)連系開始希望日（営業運転）")
+    desired_voltage_kv: float | None = Field(default=None, description="希望受電電圧 [kV]")
+    reserve_line: str | None = Field(default=None, description="予備電線路希望の有無（有/無）")
+    reserve_service: str | None = Field(default=None, description="希望する予備送電サービス")
+    reserve_contract_kw: float | None = Field(default=None, description="予備送電サービス契約電力 [kW]")
+    source_type: str | None = Field(default=None, description="新設・増設の電源種別（例: 太陽光）")
+    house_load_max_kw: float | None = Field(default=None, description="自家消費電力 最大 [kW]")
+    house_load_max_pf: float | None = Field(default=None, description="自家消費電力 最大 力率 [%]")
+    house_load_min_kw: float | None = Field(default=None, description="自家消費電力 最小 [kW]")
+    house_load_min_pf: float | None = Field(default=None, description="自家消費電力 最小 力率 [%]")
+
+
 class Project(BaseModel):
     """1 案件の全情報。"""
 
@@ -196,6 +256,9 @@ class Project(BaseModel):
     )
     pcs: list[Pcs] = Field(default_factory=list)
     battery: list[Battery] = Field(default_factory=list)
+
+    form1: Form1 | None = Field(default=None, description="様式１ 基本情報")
+    form2: Form2 | None = Field(default=None, description="様式２ 発電設備等の概要")
 
     export_power_mw: float = Field(
         default=0.0, ge=0, description="逆潮流（送電）有効電力 [MW]"

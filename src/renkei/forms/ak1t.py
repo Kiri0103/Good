@@ -7,9 +7,10 @@
 確定したもの。結合セルへは左上セルに書き込む（openpyxl の仕様）。
 
 実装済みシート:
+  - 様式1（基本情報）
+  - 様式2（発電設備等の概要：希望時期・希望受電電圧・予備電線路・電源種別・自家消費電力）
+  - 様式３の４(逆変換装置＝PCS)
   - 様式４の１(変圧器・線路) : 連系用変圧器 / その他の変圧器
-
-未実装（順次拡張）: 様式１, 様式２, 様式３の４(逆変換装置), 様式４の２(受電設備) 等
 """
 from __future__ import annotations
 
@@ -22,6 +23,8 @@ from renkei.models.project import Pcs, Project, Transformer
 
 SHEET_TR = "様式４の１(変圧器・線路)"
 SHEET_PCS = "様式３の４(逆変換装置)"
+SHEET_F1 = "様式1"
+SHEET_F2 = "様式2"
 
 
 @dataclass(frozen=True)
@@ -84,6 +87,10 @@ def _num(value: float) -> str:
     return f"{value:g}"
 
 
+def _opt_num(value) -> str | None:
+    return None if value is None else _num(value)
+
+
 def _rated_kva_label(tr: Transformer) -> str:
     if tr.rated_kva_label:
         return tr.rated_kva_label
@@ -116,10 +123,6 @@ def _fill_transformer(ws, tr: Transformer, m: TrCellMap) -> None:
     _write(ws, m.count, tr.count)
     _write(ws, m.boost_target, tr.boost_target)
     _write(ws, m.neutral_grounding, tr.neutral_grounding)
-
-
-def _opt_num(value) -> str | None:
-    return None if value is None else _num(value)
 
 
 def _fill_pcs(ws, pcs: Pcs) -> None:
@@ -160,6 +163,71 @@ def _fill_pcs(ws, pcs: Pcs) -> None:
     w("AR37", _opt_num(pcs.harmonic_total_pct))         # 高調波電流歪率 総合 [%]
 
 
+def _fill_form1(ws, f) -> None:
+    """様式１（基本情報）を転記。入力セルは様式の結合範囲から確定。"""
+    w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
+    # 申込者ブロック（上部）
+    w("AU15", f.applicant_address)   # 住所（本体）
+    w("AU18", f.applicant_company)   # 事業者名
+    w("AU20", f.representative)      # 代表者氏名
+    # (1)発電設備等設置者名
+    w("X24", f.installer_name)
+    w("AD23", f.installer_kana)
+    # 同一法人等 該当有無
+    w("X26", f.same_corporation)
+    # (2)発電所名
+    w("X29", f.plant_name)
+    w("AD28", f.plant_name_kana)
+    # (3)〜(7)
+    w("X31", f.site_address)
+    w("X33", f.connect_utility)
+    w("X35", f.existing_access)
+    w("X38", f.change_type)
+    w("X41", f.contract_type)
+    # (8)連絡先窓口
+    if f.contact is not None:
+        c = f.contact
+        w("AD45", c.address)
+        w("AD47", c.company)
+        w("AD48", c.department)
+        w("AD49", c.person)
+        w("AD50", c.phone)
+        w("AD51", c.email)
+
+
+def _fill_date(ws, d, year_cell: str, month_cell: str, day_cell: str) -> None:
+    if d is None:
+        return
+    _write(ws, year_cell, d.year)
+    _write(ws, month_cell, d.month)
+    _write(ws, day_cell, d.day)
+
+
+def _fill_form2(ws, f) -> None:
+    """様式２（発電設備等の概要）を転記。
+
+    収録: 希望時期(3日付)・希望受電電圧・予備電線路・電源種別・自家消費電力。
+    未収録（順次拡張）: 定格出力合計・受電電力（外気温別の表形式のため）。
+    """
+    w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
+    # １．希望時期
+    _fill_date(ws, f.access_start, "AN6", "AS6", "AX6")
+    _fill_date(ws, f.trial_start, "AN7", "AS7", "AX7")
+    _fill_date(ws, f.commercial_start, "AN8", "AS8", "AX8")
+    # ２．希望受電電圧・予備電線路
+    w("AM12", _opt_num(f.desired_voltage_kv))   # 希望受電電圧 [kV]
+    w("AM13", f.reserve_line)                    # 予備電線路希望の有無
+    w("AM14", f.reserve_service)                 # 希望する予備送電サービス
+    w("AM15", _opt_num(f.reserve_contract_kw))   # 予備送電サービス契約電力 [kW]
+    # ３．電源種別（新設・増設）
+    w("O20", f.source_type)
+    # ６．自家消費電力
+    w("F58", _opt_num(f.house_load_max_kw))
+    w("Y58", _opt_num(f.house_load_max_pf))
+    w("F59", _opt_num(f.house_load_min_kw))
+    w("Y59", _opt_num(f.house_load_min_pf))
+
+
 def fill_ak1t(
     project: Project,
     template_path: str | Path,
@@ -171,6 +239,13 @@ def fill_ak1t(
     """
     wb = openpyxl.load_workbook(template_path)
     written: dict[str, int] = {}
+
+    if project.form1 is not None:
+        _fill_form1(wb[SHEET_F1], project.form1)
+        written[SHEET_F1] = 1
+    if project.form2 is not None:
+        _fill_form2(wb[SHEET_F2], project.form2)
+        written[SHEET_F2] = 1
 
     transformers = [c for c in project.network if isinstance(c, Transformer)]
     renkei = [t for t in transformers if t.role == "連系用"]

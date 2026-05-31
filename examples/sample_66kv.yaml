@@ -96,3 +96,50 @@ battery:
 export_power_mw: 9.0
 operating_power_factor: 0.95
 power_factor_mode: 進み
+
+# --- 様式１ 基本情報 ---
+form1:
+  installer_name: ●●●発電株式会社
+  installer_kana: マルマルマルハツデン
+  same_corporation: 無
+  plant_name: サンプル発電所（仮称）
+  plant_name_kana: サンプルハツデンショ
+  site_address: ●●県●●市●●町●丁目●番●号
+  connect_utility: ●●電力ネットワーク株式会社
+  existing_access: 無
+  change_type: 新規
+  contract_type: FIT
+  representative: ●●　●●
+  applicant_company: ●●●発電株式会社
+  applicant_address: 東京都●●区●●　●丁目●番地●号
+  contact:
+    address: 〒●●●－●●●● 東京都●●区●●
+    company: ●●●発電株式会社
+    department: ●●●部
+    person: ●●　●●
+    phone: ●●●－●●●－●●●●
+    email: ●●●@●●●
+
+# --- 様式２ 発電設備等の概要 ---
+form2:
+  access_start: {year: 2025, month: 10, day: 1}
+  trial_start: {year: 2026, month: 2, day: 1}
+  commercial_start: {year: 2026, month: 6, day: 30}
+  desired_voltage_kv: 66.0
+  reserve_line: 有
+  reserve_service: Ａ（予備線）
+  reserve_contract_kw: 9000.0
+  source_type: 太陽光
+  house_load_max_kw: 1000.0
+  house_load_max_pf: 95.0
+  house_load_min_kw: 500.0
+  house_load_min_pf: 95.0
+
+battery:
+  - model: BESS-A
+    energy_kwh: 20000.0
+    power_kw: 5000.0
+
+export_power_mw: 9.0
+operating_power_factor: 0.95
+power_factor_mode: 進み

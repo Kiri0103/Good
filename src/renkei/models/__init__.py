@@ -6,6 +6,9 @@ from renkei.models.project import (
     Line,
     Pcs,
     Battery,
+    Contact,
+    Form1,
+    Form2,
     NetworkComponent,
     load_project,
 )
@@ -17,6 +20,9 @@ __all__ = [
     "Line",
     "Pcs",
     "Battery",
+    "Contact",
+    "Form1",
+    "Form2",
     "NetworkComponent",
     "load_project",
 ]
