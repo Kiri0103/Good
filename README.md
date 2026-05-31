@@ -75,6 +75,19 @@ renkei sld examples/sample_66kv.yaml -o single_line_diagram.svg
 JIS の厳密なシンボルではなく、接続検討レビューに足る簡略記号（系統＝〜入り円、
 変圧器＝二重円、PCS＝=/~ 箱、蓄電池＝電池記号など）を用いる。
 
+## 配置図（SVG 自動生成）
+
+敷地（`layout`）と機器（`equipment`）の平面配置を、縮尺・寸法線・方位・スケールバー
+付きの SVG で生成する。座標・寸法は [m]（原点＝敷地左下）。種別（PCS/蓄電池/受変電）で
+色分けする。
+
+```bash
+renkei layout examples/sample_66kv.yaml -o site_layout.svg
+```
+
+寸法整合（敷地外はみ出し・機器重なり・離隔不足・セットバック違反）は `renkei check`
+で自動検証される（コード L-BOUNDS / L-OVERLAP / L-CLEAR / L-SETBACK）。
+
 ## 提出前チェック（様式間整合の自動検証）
 
 案件情報に対し、様式間の整合・計算結果との突合・必須項目・物理的妥当性をルールで
@@ -99,6 +112,8 @@ renkei check examples/sample_66kv.yaml
 | V-SC-CB | 遮断器定格遮断電流 ≥ 連系点短絡電流（計算値） |
 | V-PF-* | 力率の物理的妥当性（0〜100% 等） |
 | V-DEM-LEN/PEAK | 需給パターンが24点・発電ピーク≤PCS合計 |
+| L-BOUNDS/OVERLAP | 配置図 機器の敷地外はみ出し・重なり |
+| L-CLEAR/SETBACK | 配置図 機器離隔・境界セットバック |
 | R-FORM1/PCS/TR | 必須項目の欠落 |
 
 ### 既知の制限（要確認）
@@ -136,7 +151,8 @@ renkei check examples/sample_66kv.yaml
 - [x] **AK1T 様式転記（データ系を網羅）**: 様式１, 様式２, 様式３の４（PCS）, 様式４の１（変圧器・線路）, 様式４の２（受電設備）, 様式４の３（監視制御）, 様式５の５（需給バランス）
 - [x] **単線結線図**: 機器構成からの SVG 自動生成
 - [x] **提出前チェック**: 様式間整合・計算突合・必須項目の自動検証
-- [ ] **配置図・工事工程**: レイアウト寸法チェック、ガントチャート生成
+- [x] **配置図**: 敷地・機器配置からの SVG 自動生成（寸法チェック付き）
+- [ ] **工事工程**: ガントチャート生成
 
 ## ディレクトリ構成
 
@@ -149,9 +165,10 @@ src/renkei/
   calc/voltage.py     電圧変動・力率
   forms/ak1t.py       AK1T 様式への自動転記
   forms/sld.py        単線結線図 SVG 生成
+  forms/layout.py     配置図 SVG 生成
   validate.py         提出前チェック（様式間整合の検証）
   report.py           計算レポート生成
-  cli.py              コマンドライン（calc / fill / sld / check）
+  cli.py              コマンドライン（calc / fill / sld / layout / check）
 tools/dump_form.py    様式 Excel の構造ダンプ（セルマップ作成補助）
 reference/            OCCTO 様式テンプレート・記載例（同梱）
 tests/                手計算と一致を検証

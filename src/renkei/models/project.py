@@ -288,6 +288,36 @@ class DemandPattern(BaseModel):
         return lst[hour] if hour < len(lst) else None
 
 
+class Equipment(BaseModel):
+    """配置図上の1機器（矩形フットプリント）。座標・寸法はメートル[m]。
+
+    原点は敷地の左下、x は右方向、y は上方向（数学座標系）とする。
+    """
+
+    name: str = Field(description="機器名（例: PCS-1, 蓄電池盤, 受変電設備）")
+    x_m: float = Field(description="左下隅の X 座標 [m]")
+    y_m: float = Field(description="左下隅の Y 座標 [m]")
+    width_m: float = Field(gt=0, description="幅（X方向）[m]")
+    depth_m: float = Field(gt=0, description="奥行（Y方向）[m]")
+    category: str = Field(
+        default="設備", description="種別（PCS/蓄電池/受変電/その他）。色分けに使用"
+    )
+
+
+class SiteLayout(BaseModel):
+    """敷地と機器配置（配置図の入力）。"""
+
+    site_width_m: float = Field(gt=0, description="敷地 幅（X方向）[m]")
+    site_depth_m: float = Field(gt=0, description="敷地 奥行（Y方向）[m]")
+    setback_m: float = Field(
+        default=0.0, ge=0, description="敷地境界からの必要離隔（セットバック）[m]"
+    )
+    min_clearance_m: float = Field(
+        default=0.0, ge=0, description="機器相互の必要離隔 [m]"
+    )
+    equipment: list[Equipment] = Field(default_factory=list)
+
+
 class Project(BaseModel):
     """1 案件の全情報。"""
 
@@ -318,6 +348,9 @@ class Project(BaseModel):
     )
     demand_battery: DemandPattern | None = Field(
         default=None, description="様式５の５（蓄電池）24時間運用パターン"
+    )
+    layout: SiteLayout | None = Field(
+        default=None, description="敷地・機器配置（配置図）"
     )
 
     export_power_mw: float = Field(

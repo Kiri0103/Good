@@ -236,6 +236,65 @@ def _check_demand_pattern(p: Project, r: ValidationReport) -> None:
             )
 
 
+def _check_layout(p: Project, r: ValidationReport) -> None:
+    """配置図の寸法整合（敷地外はみ出し・機器重なり・離隔・セットバック）。"""
+    lay = p.layout
+    if lay is None:
+        return
+    eqs = lay.equipment
+
+    # 敷地外へのはみ出し
+    for e in eqs:
+        if (e.x_m < -1e-9 or e.y_m < -1e-9
+                or e.x_m + e.width_m > lay.site_width_m + 1e-9
+                or e.y_m + e.depth_m > lay.site_depth_m + 1e-9):
+            r.error(
+                "L-BOUNDS", f"配置図 {e.name}",
+                f"機器が敷地（{lay.site_width_m:g}×{lay.site_depth_m:g}m）からはみ出している",
+            )
+
+    # セットバック（境界からの離隔）違反
+    if lay.setback_m > 0:
+        s = lay.setback_m
+        for e in eqs:
+            if (e.x_m < s - 1e-9 or e.y_m < s - 1e-9
+                    or e.x_m + e.width_m > lay.site_width_m - s + 1e-9
+                    or e.y_m + e.depth_m > lay.site_depth_m - s + 1e-9):
+                r.warn(
+                    "L-SETBACK", f"配置図 {e.name}",
+                    f"境界からの離隔 {lay.setback_m:g}m を確保できていない",
+                )
+
+    # 機器相互の重なり・離隔不足
+    for i in range(len(eqs)):
+        for j in range(i + 1, len(eqs)):
+            a, b = eqs[i], eqs[j]
+            gap = _rect_gap(a, b)
+            if gap < -1e-9:
+                r.error(
+                    "L-OVERLAP", "配置図",
+                    f"{a.name} と {b.name} が重なっている",
+                )
+            elif lay.min_clearance_m > 0 and gap < lay.min_clearance_m - 1e-9:
+                r.warn(
+                    "L-CLEAR", "配置図",
+                    f"{a.name} と {b.name} の離隔 {gap:.2f}m が "
+                    f"必要離隔 {lay.min_clearance_m:g}m 未満",
+                )
+
+
+def _rect_gap(a, b) -> float:
+    """2 矩形の最短間隔 [m]。重なりは負、辺接触は0。"""
+    dx = max(b.x_m - (a.x_m + a.width_m), a.x_m - (b.x_m + b.width_m), 0.0)
+    dy = max(b.y_m - (a.y_m + a.depth_m), a.y_m - (b.y_m + b.depth_m), 0.0)
+    # 重なり判定
+    overlap_x = (a.x_m < b.x_m + b.width_m) and (b.x_m < a.x_m + a.width_m)
+    overlap_y = (a.y_m < b.y_m + b.depth_m) and (b.y_m < a.y_m + a.depth_m)
+    if overlap_x and overlap_y:
+        return -1.0
+    return (dx**2 + dy**2) ** 0.5
+
+
 def _check_required(p: Project, r: ValidationReport) -> None:
     """提出に必要な主要項目の欠落チェック（WARNING）。"""
     if p.form1 is None:
@@ -264,6 +323,7 @@ _RULES = [
     _check_short_circuit,
     _check_power_factor,
     _check_demand_pattern,
+    _check_layout,
     _check_required,
 ]
 

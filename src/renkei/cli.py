@@ -2,8 +2,9 @@
 
   renkei calc  <案件YAML> [-o out.txt]    設計計算レポート
   renkei fill  <案件YAML> -o out.xlsx     AK1T 様式へ自動転記
-  renkei sld   <案件YAML> [-o out.svg]    単線結線図 SVG 生成
-  renkei check <案件YAML>                 提出前チェック（様式間整合の検証）
+  renkei sld    <案件YAML> [-o out.svg]   単線結線図 SVG 生成
+  renkei layout <案件YAML> [-o out.svg]   配置図 SVG 生成
+  renkei check  <案件YAML>                提出前チェック（様式間整合の検証）
 """
 from __future__ import annotations
 
@@ -53,6 +54,15 @@ def _cmd_sld(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_layout(args: argparse.Namespace) -> int:
+    from renkei.forms.layout import write_layout_svg
+
+    project = load_project(args.project)
+    out = write_layout_svg(project, args.output)
+    print(f"配置図 SVG を書き出しました: {out}")
+    return 0
+
+
 def _cmd_check(args: argparse.Namespace) -> int:
     from renkei.validate import format_report, validate
 
@@ -99,6 +109,13 @@ def build_parser() -> argparse.ArgumentParser:
         "-o", "--output", default="single_line_diagram.svg", help="SVG 出力先"
     )
     p_sld.set_defaults(func=_cmd_sld)
+
+    p_layout = sub.add_parser("layout", help="敷地・機器配置から配置図 SVG を生成")
+    p_layout.add_argument("project", help="案件情報 YAML/JSON ファイル")
+    p_layout.add_argument(
+        "-o", "--output", default="site_layout.svg", help="SVG 出力先"
+    )
+    p_layout.set_defaults(func=_cmd_layout)
 
     p_check = sub.add_parser("check", help="提出前チェック（様式間整合の検証）")
     p_check.add_argument("project", help="案件情報 YAML/JSON ファイル")
