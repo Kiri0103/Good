@@ -237,10 +237,26 @@ def _check_demand_pattern(p: Project, r: ValidationReport) -> None:
 
 
 def _check_layout(p: Project, r: ValidationReport) -> None:
-    """配置図の寸法整合（敷地外はみ出し・機器重なり・離隔・セットバック）。"""
+    """配置図の寸法整合（敷地外はみ出し・機器重なり・離隔・セットバック）。
+
+    auto_arrange が True の場合は自動配置後の座標で検証し、配置可能領域に
+    収まらなかった機器（overflow）を ERROR として報告する。
+    """
     lay = p.layout
     if lay is None:
         return
+
+    if lay.auto_arrange:
+        from renkei.forms.arrange import arrange
+
+        result = arrange(lay)
+        for name in result.overflow:
+            r.error(
+                "L-OVERFLOW", f"配置図 {name}",
+                f"セットバック {lay.setback_m:g}m 内の配置可能領域に収まらない",
+            )
+        lay = lay.model_copy(update={"equipment": result.placed})
+
     eqs = lay.equipment
 
     # 敷地外へのはみ出し

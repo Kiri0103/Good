@@ -32,6 +32,11 @@ def _color(cat: str) -> str:
     return _COLORS.get(cat, _COLORS["設備"])
 
 
+def _mm(meters: float) -> str:
+    """メートル値を図面用の mm 表記文字列に整形（桁区切り付き, 例: 60000）。"""
+    return f"{round(meters * 1000):,}"
+
+
 def _text(x: float, y: float, s: str, anchor: str = "start", size: int = 12,
           color: str = "black") -> str:
     return (
@@ -94,8 +99,8 @@ def build_layout_svg(layout: SiteLayout, title: str = "") -> str:
         cy = y_top_px + h_px / 2
         parts.append(_text(cx, cy, eq.name, anchor="middle", size=12))
         parts.append(
-            _text(cx, cy + 14, f"{eq.width_m:g}×{eq.depth_m:g}m", anchor="middle",
-                  size=10, color="#555")
+            _text(cx, cy + 14, f"{_mm(eq.width_m)}×{_mm(eq.depth_m)}mm",
+                  anchor="middle", size=10, color="#555")
         )
 
     # 寸法線（敷地 幅・奥行）
@@ -107,7 +112,7 @@ def build_layout_svg(layout: SiteLayout, title: str = "") -> str:
         f'marker-start="url(#arr)" marker-end="url(#arr)"/>'
     )
     parts.append(_text(_MARGIN + site_w_px / 2, y_dim - 5,
-                       f"幅 {layout.site_width_m:g} m", anchor="middle", size=12, color="#333"))
+                       f"幅 {_mm(layout.site_width_m)} mm", anchor="middle", size=12, color="#333"))
     # 奥行（左辺の左）
     x_dim = _MARGIN - 26
     parts.append(
@@ -119,7 +124,7 @@ def build_layout_svg(layout: SiteLayout, title: str = "") -> str:
         f'<text x="{x_dim - 6:.1f}" y="{_MARGIN + site_h_px / 2:.1f}" '
         f'text-anchor="middle" font-size="12" fill="#333" font-family="{font_stack()}" '
         f'transform="rotate(-90 {x_dim - 6:.1f} {_MARGIN + site_h_px / 2:.1f})">'
-        f'奥行 {layout.site_depth_m:g} m</text>'
+        f'奥行 {_mm(layout.site_depth_m)} mm</text>'
     )
 
     # スケールバー（10m 相当, 左下）
@@ -129,7 +134,7 @@ def build_layout_svg(layout: SiteLayout, title: str = "") -> str:
     parts.append(
         f'<line x1="{_MARGIN:.1f}" y1="{by:.1f}" x2="{_MARGIN + bar_px:.1f}" '
         f'y2="{by:.1f}" stroke="black" stroke-width="3"/>'
-        + _text(_MARGIN, by - 6, f"{bar_m:g} m", size=11)
+        + _text(_MARGIN, by - 6, f"{_mm(bar_m)} mm", size=11)
     )
 
     defs = (
@@ -158,10 +163,16 @@ def _nice_bar_length(site_w_m: float) -> float:
 
 
 def write_layout_svg(project: Project, output_path: str | Path) -> Path:
-    """配置図 SVG をファイルに書き出す。layout 未設定なら ValueError。"""
+    """配置図 SVG をファイルに書き出す。layout 未設定なら ValueError。
+
+    layout.auto_arrange が True の場合は、セットバック内へ自動配置してから描画する。
+    """
+    from renkei.forms.arrange import arranged_layout
+
     if project.layout is None:
         raise ValueError("配置情報（layout）が未設定です")
-    svg = build_layout_svg(project.layout, title=f"配置図 — {project.name}")
+    layout = arranged_layout(project.layout)
+    svg = build_layout_svg(layout, title=f"配置図 — {project.name}")
     p = Path(output_path)
     p.write_text(svg, encoding="utf-8")
     return p

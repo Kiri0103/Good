@@ -295,8 +295,8 @@ class Equipment(BaseModel):
     """
 
     name: str = Field(description="機器名（例: PCS-1, 蓄電池盤, 受変電設備）")
-    x_m: float = Field(description="左下隅の X 座標 [m]")
-    y_m: float = Field(description="左下隅の Y 座標 [m]")
+    x_m: float = Field(default=0.0, description="左下隅の X 座標 [m]（自動配置時は無視）")
+    y_m: float = Field(default=0.0, description="左下隅の Y 座標 [m]（自動配置時は無視）")
     width_m: float = Field(gt=0, description="幅（X方向）[m]")
     depth_m: float = Field(gt=0, description="奥行（Y方向）[m]")
     category: str = Field(
@@ -314,6 +314,10 @@ class SiteLayout(BaseModel):
     )
     min_clearance_m: float = Field(
         default=0.0, ge=0, description="機器相互の必要離隔 [m]"
+    )
+    auto_arrange: bool = Field(
+        default=False,
+        description="True なら equipment の座標を無視し、セットバック内に自動配置する",
     )
     equipment: list[Equipment] = Field(default_factory=list)
 

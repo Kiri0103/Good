@@ -177,15 +177,18 @@ demand_battery:
   active_a: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3000,4000,3000,2000,0,0,0]
   active_b: [0,0,0,0,0,0,0,0,0,-2000,-3000,-4000,-4000,-3000,-2000,0,0,0,0,0,0,0,0,0]
 
-# --- 配置図（機器レイアウト） 座標・寸法は [m]、原点は敷地左下 ---
+# --- 配置図（機器レイアウト） 寸法は [m]、原点は敷地左下、図面表記は mm ---
+# auto_arrange: true で、敷地境界から setback_m 内側に機器を自動配置する。
+# （座標 x_m/y_m は自動配置時は不要。寸法 width_m/depth_m と台数だけ与える）
 layout:
   site_width_m: 60.0
   site_depth_m: 40.0
-  setback_m: 2.0          # 敷地境界からの離隔
+  setback_m: 2.0          # 敷地境界からのセットバック
   min_clearance_m: 1.0    # 機器相互の離隔
+  auto_arrange: true
   equipment:
-    - {name: 受変電設備, x_m: 4, y_m: 30, width_m: 12, depth_m: 6, category: 受変電}
-    - {name: PCS-A, x_m: 4, y_m: 16, width_m: 8, depth_m: 4, category: PCS}
-    - {name: PCS-B, x_m: 16, y_m: 16, width_m: 8, depth_m: 4, category: PCS}
-    - {name: 蓄電池盤, x_m: 30, y_m: 14, width_m: 18, depth_m: 8, category: 蓄電池}
-    - {name: 連系開閉器, x_m: 4, y_m: 4, width_m: 6, depth_m: 4, category: 受変電}
+    - {name: 受変電設備, width_m: 12, depth_m: 6, category: 受変電}
+    - {name: PCS-A, width_m: 8, depth_m: 4, category: PCS}
+    - {name: PCS-B, width_m: 8, depth_m: 4, category: PCS}
+    - {name: 蓄電池盤, width_m: 18, depth_m: 8, category: 蓄電池}
+    - {name: 連系開閉器, width_m: 6, depth_m: 4, category: 受変電}

@@ -46,7 +46,8 @@ def test_sample_layout_passes(project):
 
 
 def test_detects_out_of_bounds(project):
-    """敷地外はみ出しを検出。"""
+    """手動配置（auto_arrange=False）での敷地外はみ出しを検出。"""
+    project.layout.auto_arrange = False
     project.layout.equipment.append(
         Equipment(name="はみ出し", x_m=58, y_m=38, width_m=10, depth_m=10)
     )
