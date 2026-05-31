@@ -79,6 +79,8 @@ def build_impedance(project: Project) -> ImpedanceResult:
     # 直列構成要素（系統→連系点の順）
     for comp in project.network:
         if isinstance(comp, Transformer):
+            if not comp.in_series:
+                continue  # 下流の昇圧変圧器等は連系点までの直列経路に含めない
             z = base.transformer_pct_z(
                 pct_z_self=comp.pct_z,
                 rated_mva=comp.rated_mva,

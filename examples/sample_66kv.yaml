@@ -29,6 +29,32 @@ network:
     xr_ratio: 20.0
     primary_kv: 66.0
     secondary_kv: 22.0
+    # --- 様式４の１ 記入用 ---
+    role: 連系用
+    in_series: true       # 系統〜連系点(22kV)の直列経路に含む
+    maker: ○○電機
+    model_name: OFAF-20000
+    connection_method: 高圧側 デルタ/低圧側 スター
+    neutral_grounding: 非接地
+    count: 1
+    xps_pct: 12.0
+    boost_target: ―
+  # 下流の昇圧用変圧器（その他）。連系点までの直列計算には含めない
+  - kind: transformer
+    name: PCS昇圧変圧器(0.69/22kV)
+    rated_mva: 2.1
+    pct_z: 6.0
+    xr_ratio: 20.0
+    primary_kv: 22.0
+    secondary_kv: 0.69
+    role: その他
+    in_series: false
+    maker: △△電機
+    model_name: MOLD-2100
+    connection_method: 高圧側 デルタ/低圧側 スター
+    count: 5
+    xps_pct: 6.0
+    boost_target: PCS1～5
 
 pcs:
   - model: PCS-500

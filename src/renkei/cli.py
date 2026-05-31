@@ -31,6 +31,17 @@ def _cmd_calc(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_fill(args: argparse.Namespace) -> int:
+    from renkei.forms.ak1t import fill_ak1t
+
+    project = load_project(args.project)
+    written = fill_ak1t(project, args.template, args.output)
+    print(f"AK1T 様式へ転記しました: {args.output}")
+    for sheet, n in written.items():
+        print(f"  {sheet}: {n} 件")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="renkei",
@@ -42,6 +53,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_calc.add_argument("project", help="案件情報 YAML/JSON ファイル")
     p_calc.add_argument("-o", "--output", help="レポート出力先ファイル")
     p_calc.set_defaults(func=_cmd_calc)
+
+    p_fill = sub.add_parser("fill", help="案件情報を AK1T 様式へ転記")
+    p_fill.add_argument("project", help="案件情報 YAML/JSON ファイル")
+    p_fill.add_argument(
+        "-t",
+        "--template",
+        default="reference/AK1T_202512r.xlsx",
+        help="AK1T テンプレート xlsx（既定: reference/AK1T_202512r.xlsx）",
+    )
+    p_fill.add_argument(
+        "-o", "--output", required=True, help="記入済み xlsx の出力先"
+    )
+    p_fill.set_defaults(func=_cmd_fill)
 
     return parser
 

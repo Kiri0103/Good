@@ -58,6 +58,38 @@ class Transformer(BaseModel):
     )
     primary_kv: float = Field(gt=0)
     secondary_kv: float = Field(gt=0)
+    tertiary_kv: float | None = Field(default=None, gt=0, description="3次電圧 [kV]")
+
+    # --- 様式記入用（AK1T 様式４の１）。未指定ならインピーダンス計算には不要 ---
+    role: Literal["連系用", "その他"] = Field(
+        default="連系用", description="連系用変圧器か、その他（昇圧用等）変圧器か"
+    )
+    in_series: bool = Field(
+        default=True,
+        description="系統〜連系点の直列経路に含めるか（下流の昇圧変圧器は False）",
+    )
+    maker: str | None = Field(default=None, description="メーカ")
+    model_name: str | None = Field(default=None, description="型式")
+    connection_method: str | None = Field(
+        default=None, description="結線方法（例: 高圧側 デルタ/低圧側 スター）"
+    )
+    neutral_grounding: str | None = Field(
+        default=None, description="中性点接地方式（例: 非接地, 直接接地）"
+    )
+    count: int = Field(default=1, ge=1, description="台数")
+    boost_target: str | None = Field(default=None, description="昇圧対象発電設備")
+    xps_pct: float | None = Field(
+        default=None,
+        gt=0,
+        description="様式記入用 Xps[%]（銘板リアクタンス）。未指定なら pct_z を用いる",
+    )
+    rated_kva_label: str | None = Field(
+        default=None,
+        description="定格容量の表記（例: '10,000／10,000'）。未指定なら rated_mva から生成",
+    )
+    base_kva: float | None = Field(
+        default=None, gt=0, description="%Z の基準容量 [kVA]。未指定なら定格容量"
+    )
 
 
 class Line(BaseModel):
