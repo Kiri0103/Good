@@ -1,0 +1,48 @@
+# サンプル案件: 66kV 受電 → 22kV 連系の特別高圧 太陽光＋蓄電池
+# 数値はダミー（記入例）。実案件では電力会社提示の系統条件・機器仕様に置換する。
+name: サンプル発電所 1号
+utility: ○○電力（要設定）
+base_mva: 10.0
+
+# 連系点（受電点）の電圧。系統電圧と異なる場合に指定。
+point_of_connection_kv: 22.0
+
+grid:
+  name: 系統(66kV)
+  voltage_kv: 66.0
+  short_circuit_capacity_mva: 1500.0   # 電力会社提示の三相短絡容量
+  xr_ratio: 10.0
+
+# 系統電源 → 連系点へ向かう順に並べる
+network:
+  - kind: line
+    name: 架空送電線(66kV)
+    voltage_kv: 66.0
+    length_km: 2.0
+    r_ohm_per_km: 0.10
+    x_ohm_per_km: 0.40
+    n_parallel: 1
+  - kind: transformer
+    name: 受電変圧器(66/22kV)
+    rated_mva: 20.0
+    pct_z: 12.0          # 自己容量基準 %IZ
+    xr_ratio: 20.0
+    primary_kv: 66.0
+    secondary_kv: 22.0
+
+pcs:
+  - model: PCS-500
+    rated_kw: 500.0
+    rated_kva: 550.0
+    count: 18
+    power_factor: 0.95
+    fault_current_pu: 1.1
+
+battery:
+  - model: BESS-A
+    energy_kwh: 20000.0
+    power_kw: 5000.0
+
+export_power_mw: 9.0
+operating_power_factor: 0.95
+power_factor_mode: 進み
