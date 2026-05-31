@@ -130,10 +130,38 @@ form2:
   reserve_service: Ａ（予備線）
   reserve_contract_kw: 9000.0
   source_type: 太陽光
+  rated_total_type: 太陽光
+  rated_total_count: 5
+  rated_total_kw: 9500.0
+  received_power_max_kw: -9000.0   # 送電（逆潮流）は負で記入
+  received_power_min_kw: 0.0
   house_load_max_kw: 1000.0
   house_load_max_pf: 95.0
   house_load_min_kw: 500.0
   house_load_min_pf: 95.0
+
+# --- 様式４の２ 受電設備および負荷設備 ---
+form4_2:
+  insulation_method: ガス絶縁
+  breaker_maker: ○○電機
+  breaker_model: GCB-66
+  breaker_voltage_kv: 66.0
+  breaker_current_a: 2000.0
+  breaker_breaking_ka: 31.5
+  breaker_breaking_time: "5"
+  pfc_type: リアクトル付進相コンデンサ
+  pfc_capacity_ehv: 3.3kV　4,000kvar
+  pfc_capacity_total: 4,000kvar
+  pfc_auto_control: 有
+
+# --- 様式４の３ 監視制御（給電情報） ---
+form4_3:
+  phone_line_form: メタル通信ケーブル
+  phone_location: 発電設備等設置地点
+  info_line_form: 光通信ケーブル
+  info_device_type: ＣＤＴ方式
+  info_location: 発電設備等設置地点
+  monitoring_control: 随時監視制御方式
 
 battery:
   - model: BESS-A

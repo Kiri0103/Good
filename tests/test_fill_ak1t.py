@@ -5,7 +5,15 @@ from pathlib import Path
 import openpyxl
 import pytest
 
-from renkei.forms.ak1t import SHEET_F1, SHEET_F2, SHEET_PCS, SHEET_TR, fill_ak1t
+from renkei.forms.ak1t import (
+    SHEET_F1,
+    SHEET_F2,
+    SHEET_F4_2,
+    SHEET_F4_3,
+    SHEET_PCS,
+    SHEET_TR,
+    fill_ak1t,
+)
 from renkei.models.project import load_project
 
 warnings.filterwarnings("ignore")
@@ -89,7 +97,38 @@ def test_form1_basic_cells(filled_wb):
 
 def test_form2_overview_cells(filled_wb):
     ws = filled_wb[SHEET_F2]
+    # 希望時期（年=AM, 月=AT, 日=AY）
+    assert ws["AM6"].value == 2025 and ws["AT6"].value == 10 and ws["AY6"].value == 1
+    assert ws["AM8"].value == 2026           # 営業運転開始 年
     assert ws["AM12"].value == "66"          # 希望受電電圧 kV
     assert ws["AM13"].value == "有"          # 予備電線路希望
     assert ws["AM14"].value == "Ａ（予備線）"  # 希望する予備送電サービス
     assert ws["AM15"].value == "9,000"       # 予備送電契約電力 kW
+    assert ws["O20"].value == "太陽光"        # 電源種別
+    # 定格出力合計（変更後）
+    assert ws["I45"].value == "太陽光" and ws["S45"].value == 5 and ws["X45"].value == "9,500"
+    # 受電電力（変更後）送電は負
+    assert ws["X51"].value == "-9,000"
+    # 自家消費電力
+    assert ws["L58"].value == "1,000" and ws["X58"].value == "95"
+
+
+def test_form4_2_received_equipment_cells(filled_wb):
+    ws = filled_wb[SHEET_F4_2]
+    assert ws["AL7"].value == "ガス絶縁"               # 絶縁方式
+    assert ws["Y10"].value == "○○電機"                # 遮断器 メーカ
+    assert ws["AL11"].value == "66"                    # 定格電圧 kV
+    assert ws["AL12"].value == "2,000"                 # 定格電流 A
+    assert ws["AL13"].value == "31.5"                  # 定格遮断電流 kA
+    assert ws["AL14"].value == "5"                     # 定格遮断時間
+    assert ws["AL17"].value == "リアクトル付進相コンデンサ"  # 調相設備 種類
+    assert ws["AL21"].value == "4,000kvar"             # 合計容量
+    assert ws["AL22"].value == "有"                    # 自動力率制御
+
+
+def test_form4_3_monitoring_cells(filled_wb):
+    ws = filled_wb[SHEET_F4_3]
+    assert ws["AA7"].value == "メタル通信ケーブル"     # 保安通信 回線形態
+    assert ws["AA8"].value == "発電設備等設置地点"     # 保安通信 設置場所
+    assert ws["AA10"].value == "ＣＤＴ方式"            # 情報伝送 装置種類
+    assert ws["O14"].value == "随時監視制御方式"        # 監視制御方式

@@ -217,10 +217,7 @@ class Form1(BaseModel):
 
 
 class Form2(BaseModel):
-    """様式２ 発電設備等の概要（スカラ項目）。
-
-    定格出力合計・受電電力（外気温別の表）は別途対応予定のため未収録。
-    """
+    """様式２ 発電設備等の概要。"""
 
     access_start: JpDate | None = Field(default=None, description="(1)アクセス設備運用開始希望日")
     trial_start: JpDate | None = Field(default=None, description="(2)連系開始希望日（試運転）")
@@ -230,10 +227,47 @@ class Form2(BaseModel):
     reserve_service: str | None = Field(default=None, description="希望する予備送電サービス")
     reserve_contract_kw: float | None = Field(default=None, description="予備送電サービス契約電力 [kW]")
     source_type: str | None = Field(default=None, description="新設・増設の電源種別（例: 太陽光）")
+    # ４．発電設備等の定格出力合計（変更後）
+    rated_total_type: str | None = Field(default=None, description="定格出力合計 電源種別")
+    rated_total_count: int | None = Field(default=None, description="定格出力合計 台数 [台]")
+    rated_total_kw: float | None = Field(default=None, description="定格出力合計 [kW]")
+    # ５．受電地点における受電電力（変更後・送電を正、受電を負）
+    received_power_max_kw: float | None = Field(default=None, description="受電電力 最大 [kW]（送電は負）")
+    received_power_min_kw: float | None = Field(default=None, description="受電電力 最小 [kW]")
+    # ６．自家消費電力
     house_load_max_kw: float | None = Field(default=None, description="自家消費電力 最大 [kW]")
     house_load_max_pf: float | None = Field(default=None, description="自家消費電力 最大 力率 [%]")
     house_load_min_kw: float | None = Field(default=None, description="自家消費電力 最小 [kW]")
     house_load_min_pf: float | None = Field(default=None, description="自家消費電力 最小 力率 [%]")
+
+
+class Form4_2(BaseModel):
+    """様式４の２ 受電設備および負荷設備。"""
+
+    insulation_method: str | None = Field(default=None, description="(1)絶縁方式（例: ガス絶縁）")
+    breaker_maker: str | None = Field(default=None, description="連系用遮断器 メーカ")
+    breaker_model: str | None = Field(default=None, description="連系用遮断器 型式")
+    breaker_voltage_kv: float | None = Field(default=None, description="定格電圧 [kV]")
+    breaker_current_a: float | None = Field(default=None, description="定格電流 [A]")
+    breaker_breaking_ka: float | None = Field(default=None, description="定格遮断電流 [kA]")
+    breaker_breaking_time: str | None = Field(default=None, description="定格遮断時間（例: 5）")
+    pfc_type: str | None = Field(default=None, description="調相設備 種類")
+    pfc_capacity_ehv: str | None = Field(default=None, description="調相設備 電圧別容量 特別高圧")
+    pfc_capacity_hv: str | None = Field(default=None, description="調相設備 電圧別容量 高圧")
+    pfc_capacity_lv: str | None = Field(default=None, description="調相設備 電圧別容量 低圧")
+    pfc_capacity_total: str | None = Field(default=None, description="調相設備 合計容量")
+    pfc_auto_control: str | None = Field(default=None, description="自動力率制御装置の有無（有/無）")
+
+
+class Form4_3(BaseModel):
+    """様式４の３ 監視制御（給電情報）。"""
+
+    phone_line_form: str | None = Field(default=None, description="保安通信用電話 通信回線形態")
+    phone_location: str | None = Field(default=None, description="保安通信用電話 設置場所")
+    info_line_form: str | None = Field(default=None, description="情報伝送装置 通信回線形態")
+    info_device_type: str | None = Field(default=None, description="情報伝送装置 装置の種類")
+    info_location: str | None = Field(default=None, description="情報伝送装置 設置場所")
+    monitoring_control: str | None = Field(default=None, description="監視制御方式")
 
 
 class Project(BaseModel):
@@ -259,6 +293,8 @@ class Project(BaseModel):
 
     form1: Form1 | None = Field(default=None, description="様式１ 基本情報")
     form2: Form2 | None = Field(default=None, description="様式２ 発電設備等の概要")
+    form4_2: Form4_2 | None = Field(default=None, description="様式４の２ 受電設備")
+    form4_3: Form4_3 | None = Field(default=None, description="様式４の３ 監視制御")
 
     export_power_mw: float = Field(
         default=0.0, ge=0, description="逆潮流（送電）有効電力 [MW]"

@@ -6,11 +6,16 @@
 セル番地は `reference/AK1T_202512r.xlsx` の様式を `tools/dump_form.py` で解析して
 確定したもの。結合セルへは左上セルに書き込む（openpyxl の仕様）。
 
-実装済みシート:
+実装済みシート（データ転記）:
   - 様式1（基本情報）
-  - 様式2（発電設備等の概要：希望時期・希望受電電圧・予備電線路・電源種別・自家消費電力）
+  - 様式2（発電設備等の概要：希望時期・希望受電電圧・予備電線路・電源種別・
+           定格出力合計・受電電力・自家消費電力）
   - 様式３の４(逆変換装置＝PCS)
   - 様式４の１(変圧器・線路) : 連系用変圧器 / その他の変圧器
+  - 様式４の２(受電設備) : 絶縁方式・連系用遮断器・調相設備
+  - 様式４の３(給電情報) : 通信形態・監視制御方式
+
+対象外: 様式３の１〜３/５（他電源種別用）、様式５系・様式６（作図/別紙シート）。
 """
 from __future__ import annotations
 
@@ -25,6 +30,8 @@ SHEET_TR = "様式４の１(変圧器・線路)"
 SHEET_PCS = "様式３の４(逆変換装置)"
 SHEET_F1 = "様式1"
 SHEET_F2 = "様式2"
+SHEET_F4_2 = "様式４の２(受電設備)"
+SHEET_F4_3 = "様式４の３(給電情報)"
 
 
 @dataclass(frozen=True)
@@ -205,19 +212,74 @@ def _fill_form1(ws, f) -> None:
         w("AD51", c.email)
 
 
-def _fill_form2(ws, f) -> None:
-    """様式２（発電設備等の概要）を転記。
+def _fill_date(ws, d, year_cell: str, month_cell: str, day_cell: str) -> None:
+    """年/月/日を該当セルへ。各セルは結合範囲の左上で検証済み。"""
+    if d is None:
+        return
+    _write(ws, year_cell, d.year)
+    _write(ws, month_cell, d.month)
+    _write(ws, day_cell, d.day)
 
-    収録（入力セル検証済み）: 希望受電電圧・予備電線路希望の有無・希望する予備送電
-    サービス・予備送電サービス契約電力。
-    未収録（入力セル未確定のため順次拡張）: 希望時期(年月日)・電源種別・自家消費電力・
-    定格出力合計・受電電力。
+
+def _fill_form2(ws, f) -> None:
+    """様式２（発電設備等の概要）を転記。入力セルは結合範囲から確定済み。
+
+    収録: 希望時期(年月日)・希望受電電圧・予備電線路・電源種別・定格出力合計・
+    受電電力・自家消費電力。受電電力は外気温別の表だが代表値（外気温なし）を記入。
     """
     w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
+    # １．希望時期（年=AM, 月=AT, 日=AY）
+    _fill_date(ws, f.access_start, "AM6", "AT6", "AY6")
+    _fill_date(ws, f.trial_start, "AM7", "AT7", "AY7")
+    _fill_date(ws, f.commercial_start, "AM8", "AT8", "AY8")
+    # ２．希望受電電圧・予備電線路
     w("AM12", _opt_num(f.desired_voltage_kv))   # 希望受電電圧 [kV]
     w("AM13", f.reserve_line)                    # 予備電線路希望の有無
     w("AM14", f.reserve_service)                 # 希望する予備送電サービス
     w("AM15", _opt_num(f.reserve_contract_kw))   # 予備送電サービス契約電力 [kW]
+    # ３．電源種別（新設・増設）
+    w("O20", f.source_type)
+    # ４．定格出力合計（変更後行: 種別I45 / 台数S45 / 出力X45）
+    w("I45", f.rated_total_type)
+    w("S45", f.rated_total_count)
+    w("X45", _opt_num(f.rated_total_kw))
+    # ５．受電電力（変更後: 最大X51 / 最小X52）
+    w("X51", _opt_num(f.received_power_max_kw))
+    w("X52", _opt_num(f.received_power_min_kw))
+    # ６．自家消費電力（最大: kW=L58 力率=X58 / 最小: kW=L59 力率=X59）
+    w("L58", _opt_num(f.house_load_max_kw))
+    w("X58", _opt_num(f.house_load_max_pf))
+    w("L59", _opt_num(f.house_load_min_kw))
+    w("X59", _opt_num(f.house_load_min_pf))
+
+
+def _fill_form4_2(ws, f) -> None:
+    """様式４の２（受電設備および負荷設備）を転記。"""
+    w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
+    w("AL7", f.insulation_method)            # 絶縁方式
+    w("Y10", f.breaker_maker)                # 連系用遮断器 メーカ
+    w("AR10", f.breaker_model)               # 連系用遮断器 型式
+    w("AL11", _opt_num(f.breaker_voltage_kv))    # 定格電圧 [kV]
+    w("AL12", _opt_num(f.breaker_current_a))     # 定格電流 [A]
+    w("AL13", _opt_num(f.breaker_breaking_ka))   # 定格遮断電流 [kA]
+    w("AL14", f.breaker_breaking_time)       # 定格遮断時間
+    w("AL17", f.pfc_type)                    # 調相設備 種類
+    w("AL18", f.pfc_capacity_ehv)            # 電圧別容量 特別高圧
+    w("AL19", f.pfc_capacity_hv)             # 電圧別容量 高圧
+    w("AL20", f.pfc_capacity_lv)             # 電圧別容量 低圧
+    w("AL21", f.pfc_capacity_total)          # 合計容量
+    w("AL22", f.pfc_auto_control)            # 自動力率制御装置の有無
+
+
+def _fill_form4_3(ws, f) -> None:
+    """様式４の３（監視制御）を転記。"""
+    w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
+    w("AA7", f.phone_line_form)      # 保安通信用電話 通信回線形態
+    w("AA8", f.phone_location)       # 保安通信用電話 設置場所
+    w("AA9", f.info_line_form)       # 情報伝送装置 通信回線形態
+    w("AA10", f.info_device_type)    # 情報伝送装置 装置の種類
+    w("AA11", f.info_location)       # 情報伝送装置 設置場所
+    w("O14", f.monitoring_control)   # 監視制御方式
 
 
 def fill_ak1t(
@@ -238,6 +300,12 @@ def fill_ak1t(
     if project.form2 is not None:
         _fill_form2(wb[SHEET_F2], project.form2)
         written[SHEET_F2] = 1
+    if project.form4_2 is not None:
+        _fill_form4_2(wb[SHEET_F4_2], project.form4_2)
+        written[SHEET_F4_2] = 1
+    if project.form4_3 is not None:
+        _fill_form4_3(wb[SHEET_F4_3], project.form4_3)
+        written[SHEET_F4_3] = 1
 
     transformers = [c for c in project.network if isinstance(c, Transformer)]
     renkei = [t for t in transformers if t.role == "連系用"]
