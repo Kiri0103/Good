@@ -127,6 +127,46 @@ class Pcs(BaseModel):
         description="短絡時の出力電流（定格電流に対する倍率, pu）。要確認・メーカ仕様優先",
     )
 
+    # --- 様式記入用（AK1T 様式３の４ 逆変換装置）。未指定の欄は空欄のまま ---
+    maker: str | None = Field(default=None, description="メーカ")
+    generator_no: str = Field(default="1", description="号発電機（例: 1, 1～10）")
+    install_type: Literal["新設", "増設", "既設"] = Field(default="新設")
+    prime_mover: str = Field(default="太陽光発電", description="原動機の種類")
+    electric_system: str | None = Field(
+        default=None, description="電気方式（例: 三相３線式）"
+    )
+    rated_voltage_kv: float | None = Field(
+        default=None, gt=0, description="定格電圧 [kV]"
+    )
+    output_min_kw: float | None = Field(default=None, description="出力変化範囲 下限 [kW]")
+    output_max_kw: float | None = Field(default=None, description="出力変化範囲 上限 [kW]")
+    voltage_range_min_pu: float | None = Field(default=None, description="運転可能電圧範囲 下限 [pu]")
+    voltage_range_max_pu: float | None = Field(default=None, description="運転可能電圧範囲 上限 [pu]")
+    pf_rated_pct: float | None = Field(
+        default=None, description="力率（定格）[%]。未指定なら power_factor×100"
+    )
+    pf_range_lag_pct: float | None = Field(default=None, description="力率運転可能範囲 遅れ [%]")
+    pf_range_lead_pct: float | None = Field(default=None, description="力率運転可能範囲 進み [%]")
+    voltage_reactive_control: str | None = Field(
+        default=None, description="電圧・無効電力制御（例: 電圧一定制御、力率一定制御）"
+    )
+    rated_frequency_hz: float | None = Field(default=None, description="定格周波数 [Hz]")
+    cont_freq_min_hz: float | None = Field(default=None, description="連続運転可能周波数 下限 [Hz]")
+    cont_freq_max_hz: float | None = Field(default=None, description="連続運転可能周波数 上限 [Hz]")
+    auto_sync_check: str | None = Field(
+        default=None, description="自動同期検定機能（有/無, 自励式の場合）"
+    )
+    current_limit_pct: float | None = Field(default=None, description="通電電流制限値 [%]")
+    pf_control_time_ms: float | None = Field(default=None, description="系統事故時の力率制御時間 [ms]")
+    main_circuit: str | None = Field(default=None, description="主回路方式")
+    output_control: str | None = Field(default=None, description="出力制御方式")
+    frt_applied: str | None = Field(default=None, description="FRT要件適用の有無（有/無）")
+    harmonic_total_pct: float | None = Field(default=None, description="高調波電流歪率 総合 [%]")
+
+    @property
+    def pf_rated_pct_value(self) -> float:
+        return self.pf_rated_pct if self.pf_rated_pct is not None else self.power_factor * 100.0
+
 
 class Battery(BaseModel):
     """蓄電池設備（容量等の記録用。インピーダンス計算には PCS を用いる）。"""

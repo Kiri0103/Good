@@ -18,9 +18,10 @@ from pathlib import Path
 
 import openpyxl
 
-from renkei.models.project import Project, Transformer
+from renkei.models.project import Pcs, Project, Transformer
 
 SHEET_TR = "様式４の１(変圧器・線路)"
+SHEET_PCS = "様式３の４(逆変換装置)"
 
 
 @dataclass(frozen=True)
@@ -117,6 +118,48 @@ def _fill_transformer(ws, tr: Transformer, m: TrCellMap) -> None:
     _write(ws, m.neutral_grounding, tr.neutral_grounding)
 
 
+def _opt_num(value) -> str | None:
+    return None if value is None else _num(value)
+
+
+def _fill_pcs(ws, pcs: Pcs) -> None:
+    """様式３の４（逆変換装置）の1台分（先頭PCS）を転記する。"""
+    w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
+
+    # １．全般
+    w("AR5", pcs.generator_no)              # 号発電機
+    w("BA5", pcs.install_type)              # 既設/新設/増設
+    w("AR7", pcs.prime_mover)               # 原動機の種類
+    w("AR8", pcs.count)                     # 台数 [台]
+
+    # ２．逆変換装置
+    w("Y11", pcs.maker)                     # メーカ
+    w("AR11", pcs.model)                    # 型式
+    w("T12", pcs.electric_system)           # 電気方式
+    w("T13", _opt_num(pcs.rated_kva if pcs.rated_kva is not None
+                      else pcs.rated_kw / pcs.power_factor))  # 定格容量 [kVA]
+    w("T14", _opt_num(pcs.rated_kw))        # 定格出力 [kW]
+    w("T15", _opt_num(pcs.output_min_kw))   # 出力変化範囲 下限
+    w("AR15", _opt_num(pcs.output_max_kw))  # 出力変化範囲 上限
+    w("T16", _opt_num(pcs.rated_voltage_kv))            # 定格電圧 [kV]
+    w("AV16", _opt_num(pcs.voltage_range_min_pu))       # 運転可能電圧範囲 下限 [pu]
+    w("BE16", _opt_num(pcs.voltage_range_max_pu))       # 運転可能電圧範囲 上限 [pu]
+    w("AL17", _opt_num(pcs.pf_rated_pct_value))         # 力率（定格）[%]
+    w("AO18", _opt_num(pcs.pf_range_lag_pct))           # 力率運転可能範囲 遅れ [%]
+    w("BC18", _opt_num(pcs.pf_range_lead_pct))          # 力率運転可能範囲 進み [%]
+    w("T19", pcs.voltage_reactive_control)              # 電圧・無効電力制御
+    w("AL20", _opt_num(pcs.rated_frequency_hz))         # 定格周波数 [Hz]
+    w("T21", _opt_num(pcs.cont_freq_min_hz))            # 連続運転可能周波数 下限 [Hz]
+    w("AC21", _opt_num(pcs.cont_freq_max_hz))           # 連続運転可能周波数 上限 [Hz]
+    w("AR30", pcs.auto_sync_check)          # 自動同期検定機能（自励式）
+    w("AR32", _opt_num(pcs.current_limit_pct))          # 通電電流制限値 [%]
+    w("AR33", _opt_num(pcs.pf_control_time_ms))         # 系統事故時の力率制御時間 [ms]
+    w("AR34", pcs.main_circuit)             # 主回路方式
+    w("AR35", pcs.output_control)           # 出力制御方式
+    w("AR36", pcs.frt_applied)              # FRT要件適用の有無
+    w("AR37", _opt_num(pcs.harmonic_total_pct))         # 高調波電流歪率 総合 [%]
+
+
 def fill_ak1t(
     project: Project,
     template_path: str | Path,
@@ -142,6 +185,10 @@ def fill_ak1t(
         _fill_transformer(ws, sonota[0], TR_SONOTA)
         n += 1
     written[SHEET_TR] = n
+
+    if project.pcs:
+        _fill_pcs(wb[SHEET_PCS], project.pcs[0])
+        written[SHEET_PCS] = 1
 
     wb.save(output_path)
     return written

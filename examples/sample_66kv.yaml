@@ -63,6 +63,30 @@ pcs:
     count: 18
     power_factor: 0.95
     fault_current_pu: 1.1
+    # --- 様式３の４ 記入用 ---
+    maker: ○○電機
+    generator_no: 1～18
+    install_type: 新設
+    prime_mover: 太陽光発電
+    electric_system: 三相３線式
+    rated_voltage_kv: 0.69
+    output_min_kw: 0.0
+    output_max_kw: 500.0
+    voltage_range_min_pu: 0.92
+    voltage_range_max_pu: 1.08
+    pf_range_lag_pct: 90.0
+    pf_range_lead_pct: 90.0
+    voltage_reactive_control: 電圧一定制御、力率一定制御
+    rated_frequency_hz: 50.0
+    cont_freq_min_hz: 48.5
+    cont_freq_max_hz: 52.5
+    auto_sync_check: 有
+    current_limit_pct: 110.0
+    pf_control_time_ms: 100.0
+    main_circuit: 自励式（電圧形）
+    output_control: 電流制御方式
+    frt_applied: 有
+    harmonic_total_pct: 5.0
 
 battery:
   - model: BESS-A
