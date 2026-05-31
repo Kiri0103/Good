@@ -106,9 +106,19 @@ def _rated_kv_label(tr: Transformer) -> str:
 
 
 def _write(ws, cell: str | None, value) -> None:
+    """セルへ書き込む。結合セルの非左上が指定された場合は左上へ解決する。"""
     if cell is None or value is None:
         return
-    ws[cell] = value
+    from openpyxl.cell.cell import MergedCell
+
+    target = ws[cell]
+    if isinstance(target, MergedCell):
+        for rng in ws.merged_cells.ranges:
+            if cell in rng:
+                ws.cell(rng.min_row, rng.min_col).value = value
+                return
+        return  # 解決不能なら安全のためスキップ
+    target.value = value
 
 
 def _fill_transformer(ws, tr: Transformer, m: TrCellMap) -> None:
@@ -195,37 +205,19 @@ def _fill_form1(ws, f) -> None:
         w("AD51", c.email)
 
 
-def _fill_date(ws, d, year_cell: str, month_cell: str, day_cell: str) -> None:
-    if d is None:
-        return
-    _write(ws, year_cell, d.year)
-    _write(ws, month_cell, d.month)
-    _write(ws, day_cell, d.day)
-
-
 def _fill_form2(ws, f) -> None:
     """様式２（発電設備等の概要）を転記。
 
-    収録: 希望時期(3日付)・希望受電電圧・予備電線路・電源種別・自家消費電力。
-    未収録（順次拡張）: 定格出力合計・受電電力（外気温別の表形式のため）。
+    収録（入力セル検証済み）: 希望受電電圧・予備電線路希望の有無・希望する予備送電
+    サービス・予備送電サービス契約電力。
+    未収録（入力セル未確定のため順次拡張）: 希望時期(年月日)・電源種別・自家消費電力・
+    定格出力合計・受電電力。
     """
     w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
-    # １．希望時期
-    _fill_date(ws, f.access_start, "AN6", "AS6", "AX6")
-    _fill_date(ws, f.trial_start, "AN7", "AS7", "AX7")
-    _fill_date(ws, f.commercial_start, "AN8", "AS8", "AX8")
-    # ２．希望受電電圧・予備電線路
     w("AM12", _opt_num(f.desired_voltage_kv))   # 希望受電電圧 [kV]
     w("AM13", f.reserve_line)                    # 予備電線路希望の有無
     w("AM14", f.reserve_service)                 # 希望する予備送電サービス
     w("AM15", _opt_num(f.reserve_contract_kw))   # 予備送電サービス契約電力 [kW]
-    # ３．電源種別（新設・増設）
-    w("O20", f.source_type)
-    # ６．自家消費電力
-    w("F58", _opt_num(f.house_load_max_kw))
-    w("Y58", _opt_num(f.house_load_max_pf))
-    w("F59", _opt_num(f.house_load_min_kw))
-    w("Y59", _opt_num(f.house_load_min_pf))
 
 
 def fill_ak1t(

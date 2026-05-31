@@ -5,7 +5,7 @@ from pathlib import Path
 import openpyxl
 import pytest
 
-from renkei.forms.ak1t import SHEET_PCS, SHEET_TR, fill_ak1t
+from renkei.forms.ak1t import SHEET_F1, SHEET_F2, SHEET_PCS, SHEET_TR, fill_ak1t
 from renkei.models.project import load_project
 
 warnings.filterwarnings("ignore")
@@ -68,3 +68,28 @@ def test_pcs_inverter_cells(filled_wb):
     assert ws["T19"].value == "電圧一定制御、力率一定制御"
     assert ws["AR34"].value == "自励式（電圧形）"
     assert ws["AR36"].value == "有"            # FRT
+
+
+def test_form1_basic_cells(filled_wb):
+    ws = filled_wb[SHEET_F1]
+    assert ws["X24"].value == "●●●発電株式会社"          # (1)設置者名
+    assert ws["AD23"].value == "マルマルマルハツデン"      # (1)フリガナ
+    assert ws["X29"].value == "サンプル発電所（仮称）"      # (2)発電所名
+    assert ws["X31"].value == "●●県●●市●●町●丁目●番●号"  # (3)住所
+    assert ws["X35"].value == "無"                       # (5)既設アクセス設備
+    assert ws["X38"].value == "新規"                     # (6)変更有無
+    assert ws["X41"].value == "FIT"                      # (7)契約種別
+    assert ws["AU20"].value == "●●　●●"                 # 代表者氏名
+    # (8)連絡先窓口
+    assert ws["AD45"].value == "〒●●●－●●●● 東京都●●区●●"
+    assert ws["AD47"].value == "●●●発電株式会社"
+    assert ws["AD49"].value == "●●　●●"
+    assert ws["AD51"].value == "●●●@●●●"
+
+
+def test_form2_overview_cells(filled_wb):
+    ws = filled_wb[SHEET_F2]
+    assert ws["AM12"].value == "66"          # 希望受電電圧 kV
+    assert ws["AM13"].value == "有"          # 予備電線路希望
+    assert ws["AM14"].value == "Ａ（予備線）"  # 希望する予備送電サービス
+    assert ws["AM15"].value == "9,000"       # 予備送電契約電力 kW
