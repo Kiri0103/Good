@@ -1,10 +1,11 @@
 """コマンドラインインタフェース。
 
-  renkei calc  <案件YAML> [-o out.txt]    設計計算レポート
-  renkei fill  <案件YAML> -o out.xlsx     AK1T 様式へ自動転記
+  renkei calc   <案件YAML> [-o out.txt]   設計計算レポート
+  renkei fill   <案件YAML> -o out.xlsx    AK1T 様式へ自動転記
   renkei sld    <案件YAML> [-o out.svg]   単線結線図 SVG 生成
   renkei layout <案件YAML> [-o out.svg]   配置図 SVG 生成
   renkei check  <案件YAML>                提出前チェック（様式間整合の検証）
+  renkei build  <案件YAML> [-d out_dir]   全成果物を一括生成
 """
 from __future__ import annotations
 
@@ -78,6 +79,78 @@ def _cmd_check(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def _cmd_build(args: argparse.Namespace) -> int:
+    """全成果物を一括生成する。
+
+    出力（出力ディレクトリ内）:
+      report.txt              設計計算レポート
+      AK1T.xlsx               記入済み AK1T 様式（テンプレートがあれば）
+      single_line_diagram.svg 単線結線図
+      site_layout.svg         配置図（layout があれば）
+      check.txt               提出前チェック結果
+
+    提出前チェックで ERROR があれば終了コード 1 を返す（成果物は生成する）。
+    """
+    from renkei.forms.sld import write_sld_svg
+    from renkei.validate import format_report, validate
+
+    project = load_project(args.project)
+    out_dir = Path(args.dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    produced: list[str] = []
+
+    # 1) 計算レポート
+    imp = build_impedance(project)
+    sc = short_circuit(project, imp)
+    vr = voltage_variation(project, imp)
+    report_path = out_dir / "report.txt"
+    report_path.write_text(
+        build_report(project, imp, sc, vr) + "\n", encoding="utf-8"
+    )
+    produced.append(str(report_path))
+
+    # 2) AK1T 様式（テンプレートがある場合のみ）
+    template = Path(args.template)
+    if template.exists():
+        from renkei.forms.ak1t import fill_ak1t
+
+        xlsx_path = out_dir / "AK1T.xlsx"
+        written = fill_ak1t(project, template, xlsx_path)
+        produced.append(f"{xlsx_path}（{sum(written.values())} シート）")
+    else:
+        print(f"※ テンプレート {template} が無いため AK1T 様式はスキップ")
+
+    # 3) 単線結線図
+    sld_path = out_dir / "single_line_diagram.svg"
+    write_sld_svg(project, sld_path)
+    produced.append(str(sld_path))
+
+    # 4) 配置図（layout があれば）
+    if project.layout is not None:
+        from renkei.forms.layout import write_layout_svg
+
+        layout_path = out_dir / "site_layout.svg"
+        write_layout_svg(project, layout_path)
+        produced.append(str(layout_path))
+
+    # 5) 提出前チェック
+    report = validate(project)
+    check_path = out_dir / "check.txt"
+    check_path.write_text(
+        format_report(report, project.name) + "\n", encoding="utf-8"
+    )
+    produced.append(str(check_path))
+
+    print(f"成果物を生成しました（{out_dir}）:")
+    for p in produced:
+        print(f"  - {p}")
+    c = report.counts()
+    print(f"提出前チェック: ERROR={c['error']} WARNING={c['warning']} INFO={c['info']}")
+    if not report.ok:
+        print("※ ERROR があります。check.txt を確認してください。")
+    return 0 if report.ok else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="renkei",
@@ -121,6 +194,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_check.add_argument("project", help="案件情報 YAML/JSON ファイル")
     p_check.add_argument("-o", "--output", help="チェック結果の出力先ファイル")
     p_check.set_defaults(func=_cmd_check)
+
+    p_build = sub.add_parser("build", help="全成果物を一括生成")
+    p_build.add_argument("project", help="案件情報 YAML/JSON ファイル")
+    p_build.add_argument(
+        "-d", "--dir", default="output", help="出力ディレクトリ（既定: output）"
+    )
+    p_build.add_argument(
+        "-t",
+        "--template",
+        default="reference/AK1T_202512r.xlsx",
+        help="AK1T テンプレート xlsx（既定: reference/AK1T_202512r.xlsx）",
+    )
+    p_build.set_defaults(func=_cmd_build)
 
     return parser
 

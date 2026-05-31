@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from renkei.forms._svg import esc as _esc
+from renkei.forms._svg import font_stack
 from renkei.models.project import Line, Project, Transformer
 
 # レイアウト定数 [px]
@@ -18,12 +20,6 @@ _BUS_X = 260           # 主母線（縦線）の X
 _TOP = 60              # 最上部 Y
 _STEP = 110            # 機器間の縦ピッチ
 _LABEL_X = _BUS_X + 70  # 右側ラベル
-
-
-def _esc(s: str) -> str:
-    return (
-        s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    )
 
 
 def _grid_symbol(cx: float, cy: float) -> str:
@@ -83,7 +79,7 @@ def _battery_symbol(cx: float, cy: float) -> str:
 def _text(x: float, y: float, s: str, anchor: str = "start", size: int = 13) -> str:
     return (
         f'<text x="{x}" y="{y}" text-anchor="{anchor}" '
-        f'font-size="{size}" font-family="sans-serif">{_esc(s)}</text>'
+        f'font-size="{size}" font-family="{font_stack()}">{_esc(s)}</text>'
     )
 
 

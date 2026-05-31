@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from renkei.forms._svg import esc as _esc
+from renkei.forms._svg import font_stack
 from renkei.models.project import Equipment, Project, SiteLayout
 
 # 描画パラメータ
@@ -26,10 +28,6 @@ _COLORS = {
 }
 
 
-def _esc(s: str) -> str:
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-
 def _color(cat: str) -> str:
     return _COLORS.get(cat, _COLORS["設備"])
 
@@ -38,7 +36,7 @@ def _text(x: float, y: float, s: str, anchor: str = "start", size: int = 12,
           color: str = "black") -> str:
     return (
         f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" '
-        f'font-size="{size}" font-family="sans-serif" fill="{color}">{_esc(s)}</text>'
+        f'font-size="{size}" font-family="{font_stack()}" fill="{color}">{_esc(s)}</text>'
     )
 
 
@@ -119,7 +117,7 @@ def build_layout_svg(layout: SiteLayout, title: str = "") -> str:
     )
     parts.append(
         f'<text x="{x_dim - 6:.1f}" y="{_MARGIN + site_h_px / 2:.1f}" '
-        f'text-anchor="middle" font-size="12" fill="#333" font-family="sans-serif" '
+        f'text-anchor="middle" font-size="12" fill="#333" font-family="{font_stack()}" '
         f'transform="rotate(-90 {x_dim - 6:.1f} {_MARGIN + site_h_px / 2:.1f})">'
         f'奥行 {layout.site_depth_m:g} m</text>'
     )
