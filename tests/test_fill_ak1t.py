@@ -102,13 +102,13 @@ def test_form2_overview_cells(filled_wb):
     # 希望時期（年=AM, 月=AT, 日=AY）
     assert ws["AM6"].value == 2025 and ws["AT6"].value == 10 and ws["AY6"].value == 1
     assert ws["AM8"].value == 2026           # 営業運転開始 年
-    assert ws["AM12"].value == "66"          # 希望受電電圧 kV
+    assert ws["AM12"].value == "22"          # 希望受電電圧 kV（連系点と一致）
     assert ws["AM13"].value == "有"          # 予備電線路希望
     assert ws["AM14"].value == "Ａ（予備線）"  # 希望する予備送電サービス
     assert ws["AM15"].value == "9,000"       # 予備送電契約電力 kW
     assert ws["O20"].value == "太陽光"        # 電源種別
-    # 定格出力合計（変更後）
-    assert ws["I45"].value == "太陽光" and ws["S45"].value == 5 and ws["X45"].value == "9,500"
+    # 定格出力合計（変更後）= PCS 500kW×18台
+    assert ws["I45"].value == "太陽光" and ws["S45"].value == 18 and ws["X45"].value == "9,000"
     # 受電電力（変更後）送電は負
     assert ws["X51"].value == "-9,000"
     # 自家消費電力
@@ -119,7 +119,7 @@ def test_form4_2_received_equipment_cells(filled_wb):
     ws = filled_wb[SHEET_F4_2]
     assert ws["AL7"].value == "ガス絶縁"               # 絶縁方式
     assert ws["Y10"].value == "○○電機"                # 遮断器 メーカ
-    assert ws["AL11"].value == "66"                    # 定格電圧 kV
+    assert ws["AL11"].value == "24"                    # 定格電圧 kV（連系点22kVクラス）
     assert ws["AL12"].value == "2,000"                 # 定格電流 A
     assert ws["AL13"].value == "31.5"                  # 定格遮断電流 kA
     assert ws["AL14"].value == "5"                     # 定格遮断時間

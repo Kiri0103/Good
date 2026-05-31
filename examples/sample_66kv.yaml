@@ -125,14 +125,14 @@ form2:
   access_start: {year: 2025, month: 10, day: 1}
   trial_start: {year: 2026, month: 2, day: 1}
   commercial_start: {year: 2026, month: 6, day: 30}
-  desired_voltage_kv: 66.0
+  desired_voltage_kv: 22.0      # 連系点（受電点）電圧と一致させる
   reserve_line: 有
   reserve_service: Ａ（予備線）
   reserve_contract_kw: 9000.0
   source_type: 太陽光
   rated_total_type: 太陽光
-  rated_total_count: 5
-  rated_total_kw: 9500.0
+  rated_total_count: 18         # PCS 500kW × 18台
+  rated_total_kw: 9000.0        # PCS合計出力と一致
   received_power_max_kw: -9000.0   # 送電（逆潮流）は負で記入
   received_power_min_kw: 0.0
   house_load_max_kw: 1000.0
@@ -144,8 +144,8 @@ form2:
 form4_2:
   insulation_method: ガス絶縁
   breaker_maker: ○○電機
-  breaker_model: GCB-66
-  breaker_voltage_kv: 66.0
+  breaker_model: VCB-24
+  breaker_voltage_kv: 24.0      # 連系点22kVクラスの遮断器
   breaker_current_a: 2000.0
   breaker_breaking_ka: 31.5
   breaker_breaking_time: "5"

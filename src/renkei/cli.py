@@ -1,8 +1,9 @@
 """コマンドラインインタフェース。
 
-  renkei calc <案件YAML> [-o out.txt]    設計計算レポート
-  renkei fill <案件YAML> -o out.xlsx     AK1T 様式へ自動転記
-  renkei sld  <案件YAML> [-o out.svg]    単線結線図 SVG 生成
+  renkei calc  <案件YAML> [-o out.txt]    設計計算レポート
+  renkei fill  <案件YAML> -o out.xlsx     AK1T 様式へ自動転記
+  renkei sld   <案件YAML> [-o out.svg]    単線結線図 SVG 生成
+  renkei check <案件YAML>                 提出前チェック（様式間整合の検証）
 """
 from __future__ import annotations
 
@@ -52,6 +53,21 @@ def _cmd_sld(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_check(args: argparse.Namespace) -> int:
+    from renkei.validate import format_report, validate
+
+    project = load_project(args.project)
+    report = validate(project)
+    text = format_report(report, project.name)
+    if args.output:
+        Path(args.output).write_text(text + "\n", encoding="utf-8")
+        print(f"チェック結果を書き出しました: {args.output}")
+    else:
+        print(text)
+    # ERROR があれば終了コード 1（CI 等で検出できるように）
+    return 0 if report.ok else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="renkei",
@@ -83,6 +99,11 @@ def build_parser() -> argparse.ArgumentParser:
         "-o", "--output", default="single_line_diagram.svg", help="SVG 出力先"
     )
     p_sld.set_defaults(func=_cmd_sld)
+
+    p_check = sub.add_parser("check", help="提出前チェック（様式間整合の検証）")
+    p_check.add_argument("project", help="案件情報 YAML/JSON ファイル")
+    p_check.add_argument("-o", "--output", help="チェック結果の出力先ファイル")
+    p_check.set_defaults(func=_cmd_check)
 
     return parser
 
