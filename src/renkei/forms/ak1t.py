@@ -32,6 +32,12 @@ SHEET_F1 = "様式1"
 SHEET_F2 = "様式2"
 SHEET_F4_2 = "様式４の２(受電設備)"
 SHEET_F4_3 = "様式４の３(給電情報)"
+SHEET_DEMAND_PV = "様式５の５"
+SHEET_DEMAND_BAT = "様式５の５(蓄電池)"
+
+# 様式５の５: 行12(00:00)〜行35(23:00)、列 E=稼働A G=稼働B I=停止A K=停止B
+_DEMAND_FIRST_ROW = 12
+_DEMAND_HOURS = 24
 
 
 @dataclass(frozen=True)
@@ -271,6 +277,21 @@ def _fill_form4_2(ws, f) -> None:
     w("AL22", f.pfc_auto_control)            # 自動力率制御装置の有無
 
 
+def _fill_demand(ws, d) -> None:
+    """様式５の５（運用パターン）を転記。
+
+    時季(J6) と 24時間分の稼働/停止×A/B列(E/G/I/K)。グラフは様式側が
+    CL〜CP の関数列経由で自動連動するため、こちらは生データのみ書き込む。
+    """
+    _write(ws, "J6", d.season)
+    for h in range(_DEMAND_HOURS):
+        r = _DEMAND_FIRST_ROW + h
+        _write(ws, f"E{r}", d._at(d.active_a, h))
+        _write(ws, f"G{r}", d._at(d.active_b, h))
+        _write(ws, f"I{r}", d._at(d.idle_a, h))
+        _write(ws, f"K{r}", d._at(d.idle_b, h))
+
+
 def _fill_form4_3(ws, f) -> None:
     """様式４の３（監視制御）を転記。"""
     w = lambda cell, val: _write(ws, cell, val)  # noqa: E731
@@ -306,6 +327,12 @@ def fill_ak1t(
     if project.form4_3 is not None:
         _fill_form4_3(wb[SHEET_F4_3], project.form4_3)
         written[SHEET_F4_3] = 1
+    if project.demand_pv is not None:
+        _fill_demand(wb[SHEET_DEMAND_PV], project.demand_pv)
+        written[SHEET_DEMAND_PV] = 1
+    if project.demand_battery is not None:
+        _fill_demand(wb[SHEET_DEMAND_BAT], project.demand_battery)
+        written[SHEET_DEMAND_BAT] = 1
 
     transformers = [c for c in project.network if isinstance(c, Transformer)]
     renkei = [t for t in transformers if t.role == "連系用"]

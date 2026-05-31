@@ -6,6 +6,8 @@ import openpyxl
 import pytest
 
 from renkei.forms.ak1t import (
+    SHEET_DEMAND_BAT,
+    SHEET_DEMAND_PV,
     SHEET_F1,
     SHEET_F2,
     SHEET_F4_2,
@@ -132,3 +134,19 @@ def test_form4_3_monitoring_cells(filled_wb):
     assert ws["AA8"].value == "発電設備等設置地点"     # 保安通信 設置場所
     assert ws["AA10"].value == "ＣＤＴ方式"            # 情報伝送 装置種類
     assert ws["O14"].value == "随時監視制御方式"        # 監視制御方式
+
+
+def test_demand_pv_cells(filled_wb):
+    # 様式５の５（太陽光）: 行12=00:00, 行24=12:00
+    ws = filled_wb[SHEET_DEMAND_PV]
+    assert ws["J6"].value == "通　年"
+    assert ws["E24"].value == 9000      # 12:00 発電
+    assert ws["G24"].value == 0         # 12:00 買電
+    assert ws["G12"].value == 50        # 00:00 買電
+
+
+def test_demand_battery_cells(filled_wb):
+    # 様式５の５（蓄電池）: 行24=12:00 充電, 行29=17:00 放電
+    ws = filled_wb[SHEET_DEMAND_BAT]
+    assert ws["G24"].value == -4000     # 12:00 充電
+    assert ws["E29"].value == 3000      # 17:00 放電

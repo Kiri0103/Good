@@ -11,6 +11,7 @@ from renkei.models.project import (
     Form2,
     Form4_2,
     Form4_3,
+    DemandPattern,
     NetworkComponent,
     load_project,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "Form2",
     "Form4_2",
     "Form4_3",
+    "DemandPattern",
     "NetworkComponent",
     "load_project",
 ]

@@ -1,7 +1,8 @@
 """コマンドラインインタフェース。
 
-  renkei calc <案件YAML>       計算してレポートを標準出力
-  renkei calc <案件YAML> -o out.txt
+  renkei calc <案件YAML> [-o out.txt]    設計計算レポート
+  renkei fill <案件YAML> -o out.xlsx     AK1T 様式へ自動転記
+  renkei sld  <案件YAML> [-o out.svg]    単線結線図 SVG 生成
 """
 from __future__ import annotations
 
@@ -42,6 +43,15 @@ def _cmd_fill(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_sld(args: argparse.Namespace) -> int:
+    from renkei.forms.sld import write_sld_svg
+
+    project = load_project(args.project)
+    out = write_sld_svg(project, args.output)
+    print(f"単線結線図 SVG を書き出しました: {out}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="renkei",
@@ -66,6 +76,13 @@ def build_parser() -> argparse.ArgumentParser:
         "-o", "--output", required=True, help="記入済み xlsx の出力先"
     )
     p_fill.set_defaults(func=_cmd_fill)
+
+    p_sld = sub.add_parser("sld", help="機器構成から単線結線図 SVG を生成")
+    p_sld.add_argument("project", help="案件情報 YAML/JSON ファイル")
+    p_sld.add_argument(
+        "-o", "--output", default="single_line_diagram.svg", help="SVG 出力先"
+    )
+    p_sld.set_defaults(func=_cmd_sld)
 
     return parser
 

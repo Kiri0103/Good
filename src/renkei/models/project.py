@@ -270,6 +270,24 @@ class Form4_3(BaseModel):
     monitoring_control: str | None = Field(default=None, description="監視制御方式")
 
 
+class DemandPattern(BaseModel):
+    """様式５の５ 24時間運用パターン（1時間刻み・00:00〜23:00）。
+
+    太陽光版: active=発電[kW], buy=買電[kW]（停止時は idle_* を使用）
+    蓄電池版: active=放電[kW], buy=充電[kW]
+    各リストは 24 要素（00時〜23時）。未指定の時間帯は 0 とみなす。
+    """
+
+    season: str = Field(default="通　年", description="時季（通年/春季/夏季/秋季/冬季）")
+    active_a: list[float] = Field(default_factory=list, description="稼働時の発電/放電 [kW]")
+    active_b: list[float] = Field(default_factory=list, description="稼働時の買電/充電 [kW]")
+    idle_a: list[float] = Field(default_factory=list, description="停止時の発電/放電 [kW]")
+    idle_b: list[float] = Field(default_factory=list, description="停止時の買電/充電 [kW]")
+
+    def _at(self, lst: list[float], hour: int) -> float | None:
+        return lst[hour] if hour < len(lst) else None
+
+
 class Project(BaseModel):
     """1 案件の全情報。"""
 
@@ -295,6 +313,12 @@ class Project(BaseModel):
     form2: Form2 | None = Field(default=None, description="様式２ 発電設備等の概要")
     form4_2: Form4_2 | None = Field(default=None, description="様式４の２ 受電設備")
     form4_3: Form4_3 | None = Field(default=None, description="様式４の３ 監視制御")
+    demand_pv: DemandPattern | None = Field(
+        default=None, description="様式５の５（太陽光）24時間運用パターン"
+    )
+    demand_battery: DemandPattern | None = Field(
+        default=None, description="様式５の５（蓄電池）24時間運用パターン"
+    )
 
     export_power_mw: float = Field(
         default=0.0, ge=0, description="逆潮流（送電）有効電力 [MW]"
