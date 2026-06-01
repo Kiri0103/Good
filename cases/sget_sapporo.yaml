@@ -1,0 +1,238 @@
+# =====================================================================
+# 案件: SGET札幌 系統用蓄電所（仮）
+#   実プロジェクト諸元ベース（公開情報より）:
+#     スパークス・グループ(SGET)／関西電力／JA三井リース
+#     北海道札幌市 系統用蓄電所（2ヵ所のうち1ヵ所分）
+#     定格出力 50MW / 定格容量 175.5MWh（約3.5H）
+#     採用蓄電池: SUNGROW PowerTitan 2.0 / EPC: 東芝エネルギーシステムズ
+#     運転開始: 2028年4月予定
+#     出典: 関西電力プレス(2025-03-25), SUNGROW JAPAN/エネハブ報道
+#
+#   構成の根拠:
+#     175,500kWh ÷ 5,015kWh ≒ 35ユニット（PowerTitan 2.0 単機5,015kWh）
+#     出力 50,000kW を 35ユニットで分担 ≒ 1,430kW/ユニット運転
+#     （PowerTitan は容量5,015kWh固定でPCS出力可変。50MW/175.5MWh=約3.5H）
+#   ※ 連系電圧・系統条件・機器型式詳細はプレスに無く特別高圧の一般構成で補い
+#     「★要確認」を付した仮値。設計検証用の再構成データ。
+# =====================================================================
+
+name: SGET札幌 系統用蓄電所（仮）
+utility: 北海道電力ネットワーク
+base_mva: 10.0
+point_of_connection_kv: 33.0      # ★要確認：北海道の特別高圧。66kV受電→33kV連系と仮定
+
+# --- 系統条件（電力会社提示）---
+grid:
+  name: 系統(66kV)
+  voltage_kv: 66.0
+  short_circuit_capacity_mva: 2500.0   # ★要確認：電力会社提示の三相短絡容量
+  xr_ratio: 12.0                        # ★要確認：系統X/R
+
+# --- 系統電源 → 連系点 への直列構成 ---
+network:
+  - kind: line
+    name: 架空送電線(66kV)
+    voltage_kv: 66.0
+    length_km: 2.5
+    r_ohm_per_km: 0.10
+    x_ohm_per_km: 0.38
+    n_parallel: 1
+  - kind: transformer
+    name: 主変圧器(66/33kV)
+    rated_mva: 60.0
+    pct_z: 15.0
+    xr_ratio: 28.0
+    primary_kv: 66.0
+    secondary_kv: 33.0
+    role: 連系用
+    in_series: true
+    maker: 東芝エネルギーシステムズ
+    model_name: OFAF-60000-66/33
+    connection_method: 高圧側 デルタ/低圧側 スター
+    neutral_grounding: 抵抗接地
+    count: 1
+    xps_pct: 15.0
+    boost_target: "―"
+  # PowerTitan 昇圧変圧器（下流: 連系点までの直列計算には含めない）
+  # PowerTitan 2.0 AC690V。5ユニット分(約7.2MVA)を1台で 33kV へ昇圧
+  - kind: transformer
+    name: PCS昇圧変圧器(0.69/33kV)
+    rated_mva: 7.5
+    pct_z: 7.0
+    xr_ratio: 22.0
+    primary_kv: 33.0
+    secondary_kv: 0.69
+    role: その他
+    in_series: false
+    maker: 東芝エネルギーシステムズ
+    model_name: MOLD-7500
+    connection_method: 高圧側 デルタ/低圧側 スター
+    count: 7                     # 5ユニット/台 × 7台 = 35ユニット
+    xps_pct: 7.0
+    boost_target: PowerTitan 1～35
+
+# --- PCS（PowerTitan 2.0 統合 PCS）35ユニット、合計出力 50,000kW ---
+# 50MW/175.5MWh = 約3.5H。各ユニット 5,015kWh 固定、出力は約1,430kWで分担運転
+pcs:
+  - model: PowerTitan2.0 ST5015（3.5H運用）
+    rated_kw: 1429.0             # 50,000kW ÷ 35ユニット ≒ 1,429kW
+    rated_kva: 1500.0
+    count: 35
+    power_factor: 0.99
+    fault_current_pu: 1.5        # ★要確認：短絡時出力電流倍率（メーカ仕様）
+    maker: SUNGROW
+    generator_no: 1～35
+    install_type: 新設
+    prime_mover: 蓄電池
+    electric_system: 三相３線式
+    rated_voltage_kv: 0.69       # AC 690V
+    output_min_kw: -1429.0       # 充電(負)〜放電(正)
+    output_max_kw: 1429.0
+    voltage_range_min_pu: 0.9
+    voltage_range_max_pu: 1.1
+    pf_range_lag_pct: 90.0
+    pf_range_lead_pct: 90.0
+    voltage_reactive_control: 電圧一定制御、力率一定制御
+    rated_frequency_hz: 50.0     # 北海道は50Hz
+    cont_freq_min_hz: 48.5
+    cont_freq_max_hz: 52.5
+    auto_sync_check: 有
+    current_limit_pct: 110.0
+    pf_control_time_ms: 100.0
+    main_circuit: 自励式（電圧形）
+    output_control: 電流制御方式
+    frt_applied: 有
+    harmonic_total_pct: 3.0
+
+battery:
+  - model: PowerTitan2.0 LFP（液冷）
+    energy_kwh: 175525.0         # 5,015kWh × 35 = 175,525kWh ≒ 175.5MWh
+    power_kw: 50000.0            # 50MW
+
+# --- 逆潮流条件（放電時に送電）---
+export_power_mw: 50.0           # 放電最大 50MW を送電
+operating_power_factor: 0.99
+power_factor_mode: 進み         # ★要確認：ΔV符号が覆るため確定必須
+
+# --- 様式１ 基本情報 ---
+form1:
+  installer_name: SGET札幌蓄電所合同会社（★正式名要確認）
+  installer_kana: エスジーイーティーサッポロチクデンショ
+  same_corporation: 無
+  plant_name: SGET札幌 系統用蓄電所（仮称）
+  plant_name_kana: エスジーイーティーサッポロケイトウヨウチクデンショ
+  site_address: 北海道札幌市内（★詳細住所要確認）
+  connect_utility: 北海道電力ネットワーク株式会社
+  existing_access: 無
+  change_type: 新規
+  contract_type: FIP
+  representative: ★要確認
+  applicant_company: SPARX Green Energy & Technology株式会社
+  applicant_address: 東京都港区（★詳細要確認）
+  contact:
+    address: ★要確認
+    company: SPARX Green Energy & Technology株式会社
+    department: ★要確認
+    person: ★要確認
+    phone: ★要確認
+    email: ★要確認
+
+# --- 様式２ 発電設備等の概要 ---
+form2:
+  access_start: {year: 2027, month: 4, day: 1}    # ★要確認（運開2028-04から逆算の仮値）
+  trial_start: {year: 2028, month: 1, day: 1}
+  commercial_start: {year: 2028, month: 4, day: 1}  # 公開：2028年4月運開予定
+  desired_voltage_kv: 33.0
+  reserve_line: 無
+  source_type: 蓄電池
+  rated_total_type: 蓄電池
+  rated_total_count: 35
+  rated_total_kw: 50000.0        # 公開値の定格出力に一致
+  received_power_max_kw: -50000.0  # 放電（送電）は負
+  received_power_min_kw: 50000.0   # 充電（受電）は正
+  house_load_max_kw: 500.0       # 液冷・空調等の所内（北海道は暖房負荷も）
+  house_load_max_pf: 95.0
+  house_load_min_kw: 150.0
+  house_load_min_pf: 95.0
+
+# --- 様式４の２ 受電設備 ---
+form4_2:
+  insulation_method: ガス絶縁
+  breaker_maker: 東芝エネルギーシステムズ
+  breaker_model: GCB-36
+  breaker_voltage_kv: 36.0       # 連系点33kVクラス
+  breaker_current_a: 2000.0
+  breaker_breaking_ka: 25.0      # 短絡電流以上を確保
+  breaker_breaking_time: "3"
+  pfc_type: リアクトル付進相コンデンサ
+  pfc_capacity_ehv: 33kV　10,000kvar
+  pfc_capacity_total: 10,000kvar
+  pfc_auto_control: 有
+
+# --- 様式４の３ 監視制御 ---
+form4_3:
+  phone_line_form: 光通信ケーブル
+  phone_location: 発電設備等設置地点
+  info_line_form: 光通信ケーブル
+  info_device_type: ＣＤＴ方式
+  info_location: 発電設備等設置地点
+  monitoring_control: 随時監視制御方式
+
+# --- 様式５の５ 24時間運用パターン[kW]（00:00〜23:00）---
+# 系統用蓄電池(3.5H): 深夜・昼間余剰に充電(負)、朝夕ピークに放電(正)
+demand_battery:
+  season: 通　年
+  # 放電(active_a): 朝(7-9時)・夕方(17-21時)のピークに放電
+  active_a: [0,0,0,0,0,0,0,30000,50000,30000,0,0,0,0,0,0,0,40000,50000,50000,40000,20000,0,0]
+  # 充電(active_b, 負): 深夜(0-5時)・昼間余剰(11-15時)に充電
+  active_b: [-40000,-50000,-50000,-40000,-30000,-15000,0,0,0,0,0,-30000,-50000,-50000,-30000,-15000,0,0,0,0,0,0,-20000,-30000]
+
+# --- 配置図（PowerTitan 35台 + 昇圧変圧器7台 + 受変電を自動配置）---
+# PowerTitan 2.0 は 20ftコンテナ相当（約6.1m × 2.4m）
+layout:
+  site_width_m: 180.0
+  site_depth_m: 110.0
+  setback_m: 5.0                 # 北海道・大規模のため離隔大きめ
+  min_clearance_m: 2.5
+  auto_arrange: true
+  equipment:
+    - {name: 受変電設備, width_m: 20, depth_m: 10, category: 受変電}
+    - {name: 主変圧器, width_m: 14, depth_m: 10, category: 受変電}
+    - {name: 連系開閉器, width_m: 6, depth_m: 5, category: 受変電}
+    - {name: 昇圧変圧器盤A, width_m: 24, depth_m: 4, category: 受変電}
+    - {name: 昇圧変圧器盤B, width_m: 24, depth_m: 4, category: 受変電}
+    - {name: PT-01, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-02, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-03, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-04, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-05, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-06, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-07, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-08, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-09, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-10, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-11, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-12, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-13, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-14, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-15, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-16, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-17, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-18, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-19, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-20, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-21, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-22, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-23, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-24, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-25, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-26, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-27, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-28, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-29, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-30, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-31, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-32, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-33, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-34, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-35, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
