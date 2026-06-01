@@ -1,0 +1,201 @@
+# =====================================================================
+# 仮想案件: 房総みらいソーラー＆ストレージ発電所
+#   特別高圧 太陽光（20MW）＋蓄電池（10MW/20MWh）
+#   66kV 受電 → 22kV 連系
+#   ※ 数値は実在企業と無関係の仮想データ。設計検証のサンプルとして作成。
+# =====================================================================
+
+name: 房総みらいソーラー＆ストレージ発電所
+utility: 東京電力パワーグリッド
+base_mva: 10.0
+point_of_connection_kv: 22.0      # 66kV受電 → 22kV連系
+
+# --- 系統条件（電力会社提示）---
+grid:
+  name: 系統(66kV)
+  voltage_kv: 66.0
+  short_circuit_capacity_mva: 2500.0   # 電力会社提示の三相短絡容量
+  xr_ratio: 12.0                        # 電力会社提示の系統X/R
+
+# --- 系統電源 → 連系点 への直列構成 ---
+network:
+  - kind: line
+    name: 架空送電線(66kV)
+    voltage_kv: 66.0
+    length_km: 3.5
+    r_ohm_per_km: 0.12          # ACSR 240sq 相当
+    x_ohm_per_km: 0.38
+    n_parallel: 1
+  - kind: transformer
+    name: 主変圧器(66/22kV)
+    rated_mva: 30.0
+    pct_z: 14.5                  # 自己容量基準 %IZ
+    xr_ratio: 25.0
+    primary_kv: 66.0
+    secondary_kv: 22.0
+    role: 連系用
+    in_series: true
+    maker: 東芝エネルギーシステムズ
+    model_name: OFAF-30000-66/22
+    connection_method: 高圧側 デルタ/低圧側 スター
+    neutral_grounding: 抵抗接地
+    count: 1
+    xps_pct: 14.5
+    boost_target: "―"
+  # PCS昇圧変圧器（下流: 連系点までの直列計算には含めない）
+  - kind: transformer
+    name: PCS昇圧変圧器(0.69/22kV)
+    rated_mva: 2.75
+    pct_z: 6.0
+    xr_ratio: 20.0
+    primary_kv: 22.0
+    secondary_kv: 0.69
+    role: その他
+    in_series: false
+    maker: ダイヘン
+    model_name: MOLD-2750
+    connection_method: 高圧側 デルタ/低圧側 スター
+    count: 8
+    xps_pct: 6.0
+    boost_target: PCS1～8
+
+# --- PCS（逆変換装置）2500kW × 8台 = 20,000kW ---
+pcs:
+  - model: PVL-L2500U
+    rated_kw: 2500.0
+    rated_kva: 2750.0
+    count: 8
+    power_factor: 0.95
+    fault_current_pu: 1.2        # メーカ仕様（短絡時出力電流倍率）
+    maker: ダイヘン
+    generator_no: 1～8
+    install_type: 新設
+    prime_mover: 太陽光発電
+    electric_system: 三相３線式
+    rated_voltage_kv: 0.69
+    output_min_kw: 0.0
+    output_max_kw: 2500.0
+    voltage_range_min_pu: 0.9
+    voltage_range_max_pu: 1.1
+    pf_range_lag_pct: 90.0
+    pf_range_lead_pct: 90.0
+    voltage_reactive_control: 電圧一定制御、力率一定制御
+    rated_frequency_hz: 50.0
+    cont_freq_min_hz: 48.5
+    cont_freq_max_hz: 52.5
+    auto_sync_check: 有
+    current_limit_pct: 120.0
+    pf_control_time_ms: 100.0
+    main_circuit: 自励式（電圧形）
+    output_control: 電流制御方式
+    frt_applied: 有
+    harmonic_total_pct: 4.5
+
+battery:
+  - model: BESS-10000
+    energy_kwh: 20000.0          # 20MWh
+    power_kw: 10000.0            # 10MW
+
+# --- 逆潮流条件 ---
+export_power_mw: 19.0           # 送電（逆潮流）最大有効電力
+operating_power_factor: 0.95
+power_factor_mode: 進み         # ★要確認：ΔV符号が覆るため確定必須
+
+# --- 様式１ 基本情報 ---
+form1:
+  installer_name: 房総みらいエナジー合同会社
+  installer_kana: ボウソウミライエナジー
+  same_corporation: 無
+  plant_name: 房総みらいソーラー＆ストレージ発電所
+  plant_name_kana: ボウソウミライソーラーアンドストレージハツデンショ
+  site_address: 千葉県君津市○○町1234番地
+  connect_utility: 東京電力パワーグリッド株式会社
+  existing_access: 無
+  change_type: 新規
+  contract_type: FIP
+  representative: 山田 太郎
+  applicant_company: 房総みらいエナジー合同会社
+  applicant_address: 東京都千代田区大手町1-1-1
+  contact:
+    address: 〒100-0004 東京都千代田区大手町1-1-1
+    company: 房総みらいエナジー合同会社
+    department: 開発部
+    person: 鈴木 一郎
+    phone: 03-1234-5678
+    email: suzuki@bosomirai.example.jp
+
+# --- 様式２ 発電設備等の概要 ---
+form2:
+  access_start: {year: 2027, month: 4, day: 1}
+  trial_start: {year: 2027, month: 9, day: 1}
+  commercial_start: {year: 2027, month: 12, day: 1}
+  desired_voltage_kv: 22.0       # 連系点電圧と一致
+  reserve_line: 無
+  source_type: 太陽光
+  rated_total_type: 太陽光
+  rated_total_count: 8           # PCS 台数と一致
+  rated_total_kw: 20000.0        # PCS 合計出力と一致
+  received_power_max_kw: -19000.0  # 送電は負
+  received_power_min_kw: 0.0
+  house_load_max_kw: 200.0
+  house_load_max_pf: 95.0
+  house_load_min_kw: 80.0
+  house_load_min_pf: 95.0
+
+# --- 様式４の２ 受電設備 ---
+form4_2:
+  insulation_method: ガス絶縁
+  breaker_maker: 三菱電機
+  breaker_model: VCB-24-25
+  breaker_voltage_kv: 24.0       # 連系点22kVクラス
+  breaker_current_a: 2000.0
+  breaker_breaking_ka: 25.0      # 短絡電流以上を確保
+  breaker_breaking_time: "3"
+  pfc_type: リアクトル付進相コンデンサ
+  pfc_capacity_ehv: 22kV　6,000kvar
+  pfc_capacity_total: 6,000kvar
+  pfc_auto_control: 有
+
+# --- 様式４の３ 監視制御 ---
+form4_3:
+  phone_line_form: 光通信ケーブル
+  phone_location: 発電設備等設置地点
+  info_line_form: 光通信ケーブル
+  info_device_type: ＣＤＴ方式
+  info_location: 発電設備等設置地点
+  monitoring_control: 随時監視制御方式
+
+# --- 様式５の５ 24時間運用パターン[kW]（00:00〜23:00）---
+# 太陽光: 昼間発電、夜間は所内買電
+demand_pv:
+  season: 通　年
+  active_a: [0,0,0,0,0,0,0,1000,4000,9000,14000,18000,20000,18000,14000,9000,4000,1000,0,0,0,0,0,0]
+  active_b: [200,200,200,200,200,200,150,0,0,0,0,0,0,0,0,0,0,0,150,200,200,200,200,200]
+# 蓄電池: 昼間に余剰を充電(負)、夕方ピークに放電(正)
+demand_battery:
+  season: 通　年
+  active_a: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8000,10000,8000,5000,2000,0,0]
+  active_b: [0,0,0,0,0,0,0,0,0,-4000,-7000,-10000,-10000,-7000,-4000,0,0,0,0,0,0,0,0,0]
+
+# --- 配置図（セットバック内に自動配置）---
+# 敷地 120m × 80m、機器をセットバック3m内に自動グリッド配置
+layout:
+  site_width_m: 120.0
+  site_depth_m: 80.0
+  setback_m: 3.0
+  min_clearance_m: 2.0
+  auto_arrange: true
+  equipment:
+    - {name: 受変電設備, width_m: 16, depth_m: 8, category: 受変電}
+    - {name: 主変圧器, width_m: 10, depth_m: 8, category: 受変電}
+    - {name: PCS-1, width_m: 6, depth_m: 3, category: PCS}
+    - {name: PCS-2, width_m: 6, depth_m: 3, category: PCS}
+    - {name: PCS-3, width_m: 6, depth_m: 3, category: PCS}
+    - {name: PCS-4, width_m: 6, depth_m: 3, category: PCS}
+    - {name: PCS-5, width_m: 6, depth_m: 3, category: PCS}
+    - {name: PCS-6, width_m: 6, depth_m: 3, category: PCS}
+    - {name: PCS-7, width_m: 6, depth_m: 3, category: PCS}
+    - {name: PCS-8, width_m: 6, depth_m: 3, category: PCS}
+    - {name: 蓄電池盤A, width_m: 12, depth_m: 3, category: 蓄電池}
+    - {name: 蓄電池盤B, width_m: 12, depth_m: 3, category: 蓄電池}
+    - {name: 連系開閉器, width_m: 5, depth_m: 4, category: 受変電}

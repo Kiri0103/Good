@@ -6,3 +6,6 @@ __pycache__/
 build/
 dist/
 *.out
+# build の生成物（案件ごとの成果物出力先）
+/out/
+/output/

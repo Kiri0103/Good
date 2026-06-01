@@ -182,6 +182,11 @@ renkei sens  cases/2026_xxxx.yaml     # 前提値の感度（判定が覆らな�
 renkei build cases/2026_xxxx.yaml -d out/2026_xxxx
 ```
 
+記入済みの例として `cases/boso_mirai.yaml`（仮想案件: 66kV受電→22kV連系、
+太陽光20MW＋蓄電池10MW/20MWh）を同梱。`check` は ERROR ゼロで通り、`sens` では
+「無効電力の進み/遅れで ΔV が −2.84% / +4.07% と符号ごと変わる（要確定）」「系統 X/R
+を 2 倍にすると ΔV が −3.06% で 3% 上限を超える」といった設計上の勘所が確認できる。
+
 ### 既知の制限（要確認）
 
 - openpyxl はテンプレート保存時に **DrawingML 図形（shapes）を失う**（画像・グラフは保持）。

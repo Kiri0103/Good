@@ -97,11 +97,15 @@ def build_layout_svg(layout: SiteLayout, title: str = "") -> str:
         )
         cx = x_px + w_px / 2
         cy = y_top_px + h_px / 2
-        parts.append(_text(cx, cy, eq.name, anchor="middle", size=12))
-        parts.append(
-            _text(cx, cy + 14, f"{_mm(eq.width_m)}×{_mm(eq.depth_m)}mm",
-                  anchor="middle", size=10, color="#555")
-        )
+        # 機器名: 矩形幅に収まるようフォントを縮める（最小7px）
+        name_size = max(7, min(12, int(w_px / max(len(eq.name), 1) * 1.6)))
+        parts.append(_text(cx, cy, eq.name, anchor="middle", size=name_size))
+        # 寸法ラベルは矩形が十分広い場合のみ（密集時の重なりを回避）
+        dim_label = f"{_mm(eq.width_m)}×{_mm(eq.depth_m)}mm"
+        if w_px >= 7 * len(dim_label) and h_px >= 24:
+            parts.append(
+                _text(cx, cy + 14, dim_label, anchor="middle", size=9, color="#555")
+            )
 
     # 寸法線（敷地 幅・奥行）
     # 幅（下辺の下）
