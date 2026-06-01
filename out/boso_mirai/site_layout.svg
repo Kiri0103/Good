@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="607" viewBox="0 0 840 607">
+  <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 4 L8 1 L8 7 Z" fill="#333"/></marker></defs>
+  <rect width="840" height="607" fill="white"/>
+  <text x="70.0" y="30.0" text-anchor="start" font-size="16" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">配置図 — 房総みらいソーラー＆ストレージ発電所</text>
+  <line x1="800.0" y1="55" x2="800.0" y2="25" stroke="black" stroke-width="2"/><path d="M 795.0 32 L 800.0 22 L 805.0 32 Z" fill="black"/><text x="800.0" y="70.0" text-anchor="middle" font-size="13" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">N</text>
+  <rect x="70.0" y="70.0" width="700.0" height="466.7" fill="#fafafa" stroke="black" stroke-width="2"/>
+  <rect x="87.5" y="87.5" width="665.0" height="431.7" fill="none" stroke="#cc4444" stroke-width="1" stroke-dasharray="6 4"/>
+  <rect x="87.5" y="472.5" width="93.3" height="46.7" fill="#ffe6cc" stroke="black" stroke-width="1.5"/>
+  <text x="134.2" y="495.8" text-anchor="middle" font-size="12" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">受変電設備</text>
+  <rect x="192.5" y="472.5" width="58.3" height="46.7" fill="#ffe6cc" stroke="black" stroke-width="1.5"/>
+  <text x="221.7" y="495.8" text-anchor="middle" font-size="12" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">主変圧器</text>
+  <rect x="262.5" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="280.0" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-1</text>
+  <rect x="309.2" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="326.7" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-2</text>
+  <rect x="355.8" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="373.3" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-3</text>
+  <rect x="402.5" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="420.0" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-4</text>
+  <rect x="449.2" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="466.7" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-5</text>
+  <rect x="495.8" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="513.3" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-6</text>
+  <rect x="542.5" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="560.0" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-7</text>
+  <rect x="589.2" y="501.7" width="35.0" height="17.5" fill="#cfe8ff" stroke="black" stroke-width="1.5"/>
+  <text x="606.7" y="510.4" text-anchor="middle" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">PCS-8</text>
+  <rect x="635.8" y="501.7" width="70.0" height="17.5" fill="#d6f5d6" stroke="black" stroke-width="1.5"/>
+  <text x="670.8" y="510.4" text-anchor="middle" font-size="12" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">蓄電池盤A</text>
+  <rect x="87.5" y="443.3" width="70.0" height="17.5" fill="#d6f5d6" stroke="black" stroke-width="1.5"/>
+  <text x="122.5" y="452.1" text-anchor="middle" font-size="12" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">蓄電池盤B</text>
+  <rect x="169.2" y="437.5" width="29.2" height="23.3" fill="#ffe6cc" stroke="black" stroke-width="1.5"/>
+  <text x="183.8" y="449.2" text-anchor="middle" font-size="9" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">連系開閉器</text>
+  <line x1="70.0" y1="562.7" x2="770.0" y2="562.7" stroke="#333" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="420.0" y="557.7" text-anchor="middle" font-size="12" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="#333">幅 120,000 mm</text>
+  <line x1="44.0" y1="70.0" x2="44.0" y2="536.7" stroke="#333" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="38.0" y="303.3" text-anchor="middle" font-size="12" fill="#333" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" transform="rotate(-90 38.0 303.3)">奥行 80,000 mm</text>
+  <line x1="70.0" y1="582.7" x2="186.7" y2="582.7" stroke="black" stroke-width="3"/><text x="70.0" y="576.7" text-anchor="start" font-size="11" font-family="'WenQuanYi Zen Hei','Noto Sans CJK JP','IPAexGothic','IPAGothic','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','MS PGothic',sans-serif" fill="black">20,000 mm</text>
+</svg>

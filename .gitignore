@@ -6,6 +6,6 @@ __pycache__/
 build/
 dist/
 *.out
-# build の生成物（案件ごとの成果物出力先）
-/out/
+# build のデフォルト出力先（一時作業用）は除外。
+# 提出成果物は out/<案件名>/ に置き、こちらは Git 管理する。
 /output/
