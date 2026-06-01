@@ -187,6 +187,11 @@ renkei build cases/2026_xxxx.yaml -d out/2026_xxxx
 「無効電力の進み/遅れで ΔV が −2.84% / +4.07% と符号ごと変わる（要確定）」「系統 X/R
 を 2 倍にすると ΔV が −3.06% で 3% 上限を超える」といった設計上の勘所が確認できる。
 
+もう一例 `cases/tonegawa_bess.yaml`（系統用蓄電池 50MW/2H = 100MWh、SUNGROW
+PowerTitan 2.0 ST5015kWh-2500kW-2h × 20ユニット、蓄電池単独）も同梱。短絡電流が
+10.7kA（PCS寄与 2.0kA）と大きく、大容量 BESS の遮断器選定・電圧変動の確認例として
+使える。
+
 ### 既知の制限（要確認）
 
 - openpyxl はテンプレート保存時に **DrawingML 図形（shapes）を失う**（画像・グラフは保持）。

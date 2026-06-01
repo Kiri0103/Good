@@ -1,0 +1,214 @@
+# =====================================================================
+# 仮想案件: 利根川蓄電所（系統用蓄電池 50MW / 2H = 100MWh）
+#   SUNGROW PowerTitan 2.0 ST5015kWh-2500kW-2h × 20ユニット
+#   66kV 受電 → 22kV 連系、蓄電池単独（太陽光なし）
+#   ※ 数値は仮想。機器スペックはメーカ公表値ベース（★要確認は提出前に確定）
+#
+#   PowerTitan 2.0 単機諸元（公表値）:
+#     容量 5,015 kWh / 出力 2,500 kW(2H) / AC出力 2,520 kVA / AC 690V / DC1500V
+#   システム: 2,500kW×20 = 50,000kW(50MW), 5,015kWh×20 = 100,300kWh
+# =====================================================================
+
+name: 利根川蓄電所
+utility: 東京電力パワーグリッド
+base_mva: 10.0
+point_of_connection_kv: 22.0      # 66kV受電 → 22kV連系
+
+# --- 系統条件（電力会社提示）---
+grid:
+  name: 系統(66kV)
+  voltage_kv: 66.0
+  short_circuit_capacity_mva: 3000.0   # ★要確認：電力会社提示の三相短絡容量
+  xr_ratio: 12.0                        # ★要確認：系統X/R
+
+# --- 系統電源 → 連系点 への直列構成 ---
+network:
+  - kind: line
+    name: 架空送電線(66kV)
+    voltage_kv: 66.0
+    length_km: 2.0
+    r_ohm_per_km: 0.10          # ACSR 330sq 相当
+    x_ohm_per_km: 0.37
+    n_parallel: 1
+  - kind: transformer
+    name: 主変圧器(66/22kV)
+    rated_mva: 60.0
+    pct_z: 15.0                  # 自己容量基準 %IZ
+    xr_ratio: 28.0
+    primary_kv: 66.0
+    secondary_kv: 22.0
+    role: 連系用
+    in_series: true
+    maker: 日立製作所
+    model_name: OFAF-60000-66/22
+    connection_method: 高圧側 デルタ/低圧側 スター
+    neutral_grounding: 抵抗接地
+    count: 1
+    xps_pct: 15.0
+    boost_target: "―"
+  # PowerTitan 昇圧変圧器（下流: 連系点までの直列計算には含めない）
+  # PowerTitan 2.0 は AC690V 出力。2ユニット(5,040kVA)を1台で 22kV へ昇圧
+  - kind: transformer
+    name: PCS昇圧変圧器(0.69/22kV)
+    rated_mva: 5.25
+    pct_z: 6.5
+    xr_ratio: 22.0
+    primary_kv: 22.0
+    secondary_kv: 0.69
+    role: その他
+    in_series: false
+    maker: ダイヘン
+    model_name: MOLD-5250
+    connection_method: 高圧側 デルタ/低圧側 スター
+    count: 10                    # 2ユニット/台 × 10台 = 20ユニット
+    xps_pct: 6.5
+    boost_target: PowerTitan 1～20
+
+# --- PCS（PowerTitan 2.0 統合 PCS） 2,500kW × 20ユニット = 50,000kW ---
+pcs:
+  - model: PowerTitan2.0 ST5015kWh-2500kW-2h
+    rated_kw: 2500.0
+    rated_kva: 2520.0
+    count: 20
+    power_factor: 0.99           # PowerTitan は力率 ±1まで可（運用 0.99 進み想定）
+    fault_current_pu: 1.5        # ★要確認：短絡時出力電流倍率（メーカ仕様）。sensで影響確認
+    maker: SUNGROW
+    generator_no: 1～20
+    install_type: 新設
+    prime_mover: 蓄電池
+    electric_system: 三相３線式
+    rated_voltage_kv: 0.69       # AC 690V
+    output_min_kw: -2500.0       # 充電側（負）〜放電側（正）
+    output_max_kw: 2500.0
+    voltage_range_min_pu: 0.9    # AC 621V〜759V → 約0.9〜1.1pu
+    voltage_range_max_pu: 1.1
+    pf_range_lag_pct: 90.0
+    pf_range_lead_pct: 90.0
+    voltage_reactive_control: 電圧一定制御、力率一定制御
+    rated_frequency_hz: 50.0
+    cont_freq_min_hz: 48.5
+    cont_freq_max_hz: 52.5
+    auto_sync_check: 有
+    current_limit_pct: 110.0
+    pf_control_time_ms: 100.0
+    main_circuit: 自励式（電圧形）
+    output_control: 電流制御方式
+    frt_applied: 有
+    harmonic_total_pct: 3.0
+
+battery:
+  - model: PowerTitan2.0 LFP（液冷）
+    energy_kwh: 100300.0         # 5,015kWh × 20 = 100,300kWh ≒ 100MWh
+    power_kw: 50000.0            # 50MW
+
+# --- 逆潮流条件（放電時に送電）---
+export_power_mw: 50.0           # 放電最大 50MW を送電
+operating_power_factor: 0.99
+power_factor_mode: 進み         # ★要確認：ΔV符号が覆るため確定必須
+
+# --- 様式１ 基本情報 ---
+form1:
+  installer_name: 利根川ストレージ合同会社
+  installer_kana: トネガワストレージ
+  same_corporation: 無
+  plant_name: 利根川蓄電所
+  plant_name_kana: トネガワチクデンショ
+  site_address: 茨城県猿島郡○○町5678番地
+  connect_utility: 東京電力パワーグリッド株式会社
+  existing_access: 無
+  change_type: 新規
+  contract_type: FIP             # 系統用蓄電池（非FIT/FIP相対も可）
+  representative: 田中 次郎
+  applicant_company: 利根川ストレージ合同会社
+  applicant_address: 東京都港区芝公園4-1-1
+  contact:
+    address: 〒105-0011 東京都港区芝公園4-1-1
+    company: 利根川ストレージ合同会社
+    department: 事業開発部
+    person: 佐藤 花子
+    phone: 03-9876-5432
+    email: sato@tonegawa-storage.example.jp
+
+# --- 様式２ 発電設備等の概要 ---
+form2:
+  access_start: {year: 2027, month: 6, day: 1}
+  trial_start: {year: 2028, month: 1, day: 1}
+  commercial_start: {year: 2028, month: 4, day: 1}
+  desired_voltage_kv: 22.0       # 連系点電圧と一致
+  reserve_line: 無
+  source_type: 蓄電池
+  rated_total_type: 蓄電池
+  rated_total_count: 20          # PCS 台数と一致
+  rated_total_kw: 50000.0        # PCS 合計出力と一致
+  received_power_max_kw: -50000.0  # 放電（送電）は負
+  received_power_min_kw: 50000.0   # 充電（受電）は正・最大50MW
+  house_load_max_kw: 500.0       # 液冷・空調等の所内
+  house_load_max_pf: 95.0
+  house_load_min_kw: 150.0
+  house_load_min_pf: 95.0
+
+# --- 様式４の２ 受電設備 ---
+form4_2:
+  insulation_method: ガス絶縁
+  breaker_maker: 三菱電機
+  breaker_model: VCB-24-25
+  breaker_voltage_kv: 24.0       # 連系点22kVクラス
+  breaker_current_a: 2500.0
+  breaker_breaking_ka: 25.0      # 短絡電流以上を確保
+  breaker_breaking_time: "3"
+  pfc_type: リアクトル付進相コンデンサ
+  pfc_capacity_ehv: 22kV　10,000kvar
+  pfc_capacity_total: 10,000kvar
+  pfc_auto_control: 有
+
+# --- 様式４の３ 監視制御 ---
+form4_3:
+  phone_line_form: 光通信ケーブル
+  phone_location: 発電設備等設置地点
+  info_line_form: 光通信ケーブル
+  info_device_type: ＣＤＴ方式
+  info_location: 発電設備等設置地点
+  monitoring_control: 随時監視制御方式
+
+# --- 様式５の５ 24時間運用パターン[kW]（00:00〜23:00）---
+# 蓄電池単独: 深夜〜早朝に充電(負)、夕方ピークに放電(正)。1日2サイクル想定
+demand_battery:
+  season: 通　年
+  # 放電(active_a): 朝ピーク(7-9時)と夕方ピーク(17-20時)に放電
+  active_a: [0,0,0,0,0,0,0,30000,50000,20000,0,0,0,0,0,0,0,40000,50000,50000,30000,0,0,0]
+  # 充電(active_b, 負): 深夜(0-5時)と昼間余剰(10-15時)に充電
+  active_b: [-40000,-50000,-50000,-40000,-20000,-10000,0,0,0,0,-30000,-50000,-50000,-40000,-20000,0,0,0,0,0,0,-30000,-40000,-40000]
+
+# --- 配置図（PowerTitan 20台 + 昇圧変圧器 + 受変電を自動配置）---
+# PowerTitan 2.0 は 20ft コンテナ相当（約6.1m × 2.4m）
+layout:
+  site_width_m: 150.0
+  site_depth_m: 90.0
+  setback_m: 3.0
+  min_clearance_m: 2.0
+  auto_arrange: true
+  equipment:
+    - {name: 受変電設備, width_m: 18, depth_m: 8, category: 受変電}
+    - {name: 主変圧器, width_m: 12, depth_m: 8, category: 受変電}
+    - {name: 連系開閉器, width_m: 5, depth_m: 4, category: 受変電}
+    - {name: PT-1, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-2, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-3, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-4, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-5, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-6, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-7, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-8, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-9, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-10, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-11, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-12, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-13, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-14, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-15, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-16, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-17, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-18, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-19, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: PT-20, width_m: 6.1, depth_m: 2.4, category: 蓄電池}
+    - {name: 昇圧変圧器盤, width_m: 30, depth_m: 4, category: 受変電}
