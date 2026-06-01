@@ -6,6 +6,7 @@
   renkei layout <案件YAML> [-o out.svg]   配置図 SVG 生成
   renkei check  <案件YAML>                提出前チェック（様式間整合の検証）
   renkei build  <案件YAML> [-d out_dir]   全成果物を一括生成
+  renkei sens   <案件YAML>                前提値の感度分析（精度検証）
 """
 from __future__ import annotations
 
@@ -151,6 +152,26 @@ def _cmd_build(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def _cmd_sens(args: argparse.Namespace) -> int:
+    from renkei.sensitivity import format_sensitivity, run_sensitivity
+
+    project = load_project(args.project)
+    report = run_sensitivity(project)
+    # 遮断器定格遮断電流（様式4の2）があれば判定余裕に使う
+    breaker_ka = None
+    if project.form4_2 is not None:
+        breaker_ka = project.form4_2.breaker_breaking_ka
+    text = format_sensitivity(
+        report, project.name, breaker_ka=breaker_ka, dv_limit_pct=args.dv_limit
+    )
+    if args.output:
+        Path(args.output).write_text(text + "\n", encoding="utf-8")
+        print(f"感度分析を書き出しました: {args.output}")
+    else:
+        print(text)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="renkei",
@@ -207,6 +228,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="AK1T テンプレート xlsx（既定: reference/AK1T_202512r.xlsx）",
     )
     p_build.set_defaults(func=_cmd_build)
+
+    p_sens = sub.add_parser("sens", help="前提値の感度分析（精度検証）")
+    p_sens.add_argument("project", help="案件情報 YAML/JSON ファイル")
+    p_sens.add_argument("-o", "--output", help="感度分析の出力先ファイル")
+    p_sens.add_argument(
+        "--dv-limit", type=float, default=None,
+        help="電圧変動の上限 [%%]（判定余裕の評価に使用, 例: 2.0）",
+    )
+    p_sens.set_defaults(func=_cmd_sens)
 
     return parser
 

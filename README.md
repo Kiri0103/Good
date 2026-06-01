@@ -149,6 +149,39 @@ renkei build examples/sample_66kv.yaml -d output
 #   提出前チェックで ERROR があれば終了コード 1
 ```
 
+## 前提値の感度分析（実案件適用前の精度検証）
+
+接続検討では一部の入力が暫定値になりがち（X/R 比・PCS 短絡寄与倍率・無効電力の
+進み/遅れ）。これらを妥当な範囲で振り、主要指標（総合 %Z・短絡電流・ΔV）への影響を
+定量化して、**前提値の不確かさが判定（遮断器容量・電圧変動）を覆さないか**を確認する。
+
+```bash
+renkei sens examples/sample_66kv.yaml --dv-limit 2.0
+```
+
+サンプルでの知見の例:
+
+- **PCS 短絡寄与**（1.0〜2.0pu）: 合計短絡電流 4.09〜4.35kA。遮断器 31.5kA に対し
+  余裕大 → 暫定値でも判定は覆らない（確定を待たず進められる）。
+- **無効電力の進み/遅れ**: ΔV が進み −1.65% / 遅れ +2.39% と符号ごと変わる →
+  **最重要前提**。確定しないと電圧変動判定（上限 2%）が覆る。
+- **X/R 比**: |Z|・短絡電流にはほぼ無影響、ΔV に中程度の影響。
+
+「どの前提値を急いで確定すべきか」を機械的に示せる。
+
+## 実案件への適用
+
+`examples/template_blank.yaml` を案件ごとにコピーして使う。`★要確認` のコメントが
+付いた項目（系統短絡容量・X/R・PCS 短絡寄与・力率の進み遅れ等）は提出前に根拠を確認。
+
+```bash
+cp examples/template_blank.yaml cases/2026_xxxx.yaml
+# 値を実データに置換してから:
+renkei check cases/2026_xxxx.yaml     # 様式間整合（ERROR をゼロに）
+renkei sens  cases/2026_xxxx.yaml     # 前提値の感度（判定が覆らないか）
+renkei build cases/2026_xxxx.yaml -d out/2026_xxxx
+```
+
 ### 既知の制限（要確認）
 
 - openpyxl はテンプレート保存時に **DrawingML 図形（shapes）を失う**（画像・グラフは保持）。
@@ -185,6 +218,8 @@ renkei build examples/sample_66kv.yaml -d output
 - [x] **単線結線図**: 機器構成からの SVG 自動生成
 - [x] **提出前チェック**: 様式間整合・計算突合・必須項目の自動検証
 - [x] **配置図**: 敷地・機器配置からの SVG 自動生成（寸法チェック付き）
+- [x] **一括生成・感度分析**: build で全成果物、sens で前提値の精度検証
+- [x] **実案件適用準備**: 入力テンプレート（template_blank.yaml）
 - [ ] **工事工程**: ガントチャート生成
 
 ## ディレクトリ構成
@@ -202,8 +237,9 @@ src/renkei/
   forms/arrange.py    機器の自動配置（セットバック内グリッド）
   forms/_svg.py       SVG 共通（日本語フォント解決）
   validate.py         提出前チェック（様式間整合の検証）
+  sensitivity.py      前提値の感度分析（精度検証）
   report.py           計算レポート生成
-  cli.py              コマンドライン（calc / fill / sld / layout / check / build）
+  cli.py              コマンドライン（calc / fill / sld / layout / check / build / sens）
 tools/dump_form.py    様式 Excel の構造ダンプ（セルマップ作成補助）
 reference/            OCCTO 様式テンプレート・記載例（同梱）
 tests/                手計算と一致を検証
