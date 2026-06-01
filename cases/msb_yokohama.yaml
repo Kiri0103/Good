@@ -1,0 +1,199 @@
+# =====================================================================
+# 案件: MSB横浜（仮）系統用蓄電所
+#   実プロジェクト諸元ベース（公開情報より）:
+#     MIRARTHエナジーソリューションズ 特別高圧系統用蓄電池事業（横浜市）
+#     定格出力 12,000kW / 定格容量 65,808kWh（≒5.5H）/ 運転開始 2029年度予定
+#     出典: MIRARTH/PR TIMES プレスリリース（2025-08-29）
+#
+#   ※ 出力・容量・立地・運開時期は公開情報に基づく。連系電圧・機器型式・系統条件
+#     などプレスに無い項目は特別高圧の一般的構成で補い「★要確認」を付した仮値。
+#     実在企業の公開情報を参照しているが、本ファイルは設計検証用の再構成データ。
+# =====================================================================
+
+name: MSB横浜 系統用蓄電所（仮）
+utility: 東京電力パワーグリッド
+base_mva: 10.0
+point_of_connection_kv: 22.0      # ★要確認：66kV受電→22kV連系と仮定（12MW級の一般構成）
+
+# --- 系統条件（電力会社提示）---
+grid:
+  name: 系統(66kV)
+  voltage_kv: 66.0
+  short_circuit_capacity_mva: 2000.0   # ★要確認：電力会社提示の三相短絡容量
+  xr_ratio: 12.0                        # ★要確認：系統X/R
+
+# --- 系統電源 → 連系点 への直列構成 ---
+network:
+  - kind: line
+    name: 架空送電線(66kV)
+    voltage_kv: 66.0
+    length_km: 1.5
+    r_ohm_per_km: 0.10
+    x_ohm_per_km: 0.38
+    n_parallel: 1
+  - kind: transformer
+    name: 主変圧器(66/22kV)
+    rated_mva: 16.0                # 12MW + 余裕
+    pct_z: 12.5
+    xr_ratio: 24.0
+    primary_kv: 66.0
+    secondary_kv: 22.0
+    role: 連系用
+    in_series: true
+    maker: ★要確認
+    model_name: OFAF-16000-66/22
+    connection_method: 高圧側 デルタ/低圧側 スター
+    neutral_grounding: 抵抗接地
+    count: 1
+    xps_pct: 12.5
+    boost_target: "―"
+  # 蓄電池PCS昇圧変圧器（下流: 連系点までの直列計算には含めない）
+  - kind: transformer
+    name: PCS昇圧変圧器(0.69/22kV)
+    rated_mva: 3.3
+    pct_z: 6.0
+    xr_ratio: 20.0
+    primary_kv: 22.0
+    secondary_kv: 0.69
+    role: その他
+    in_series: false
+    maker: ★要確認
+    model_name: MOLD-3300
+    connection_method: 高圧側 デルタ/低圧側 スター
+    count: 4                       # 3MW級PCS × 4台
+    xps_pct: 6.0
+    boost_target: BESS PCS 1～4
+
+# --- PCS（蓄電池用 PCS） 3,000kW × 4台 = 12,000kW（公開値の定格出力に一致）---
+pcs:
+  - model: BESS-PCS-3000（★型式要確認）
+    rated_kw: 3000.0
+    rated_kva: 3000.0
+    count: 4
+    power_factor: 0.99
+    fault_current_pu: 1.5        # ★要確認：短絡時出力電流倍率（メーカ仕様）
+    maker: ★要確認
+    generator_no: 1～4
+    install_type: 新設
+    prime_mover: 蓄電池
+    electric_system: 三相３線式
+    rated_voltage_kv: 0.69
+    output_min_kw: -3000.0       # 充電(負)〜放電(正)
+    output_max_kw: 3000.0
+    voltage_range_min_pu: 0.9
+    voltage_range_max_pu: 1.1
+    pf_range_lag_pct: 90.0
+    pf_range_lead_pct: 90.0
+    voltage_reactive_control: 電圧一定制御、力率一定制御
+    rated_frequency_hz: 50.0
+    cont_freq_min_hz: 48.5
+    cont_freq_max_hz: 52.5
+    auto_sync_check: 有
+    current_limit_pct: 110.0
+    pf_control_time_ms: 100.0
+    main_circuit: 自励式（電圧形）
+    output_control: 電流制御方式
+    frt_applied: 有
+    harmonic_total_pct: 3.0
+
+battery:
+  - model: LFP（★メーカ要確認）
+    energy_kwh: 65808.0          # 公開値：定格容量 65,808kWh
+    power_kw: 12000.0            # 公開値：定格出力 12,000kW（約5.5H）
+
+# --- 逆潮流条件（放電時に送電）---
+export_power_mw: 12.0           # 放電最大 12MW
+operating_power_factor: 0.99
+power_factor_mode: 進み         # ★要確認：ΔV符号が覆るため確定必須
+
+# --- 様式１ 基本情報 ---
+form1:
+  installer_name: MIRAI東京蓄電合同会社（公開情報の事業主体）
+  installer_kana: ミライトウキョウチクデン
+  same_corporation: 無
+  plant_name: MSB横浜 系統用蓄電所（仮称）
+  plant_name_kana: エムエスビーヨコハマケイトウヨウチクデンショ
+  site_address: 神奈川県横浜市内（★詳細住所要確認）
+  connect_utility: 東京電力パワーグリッド株式会社
+  existing_access: 無
+  change_type: 新規
+  contract_type: FIP
+  representative: ★要確認
+  applicant_company: MIRAI東京蓄電合同会社
+  applicant_address: ★要確認
+  contact:
+    address: ★要確認
+    company: MIRARTHエナジーソリューションズ株式会社
+    department: ★要確認
+    person: ★要確認
+    phone: ★要確認
+    email: ★要確認
+
+# --- 様式２ 発電設備等の概要 ---
+form2:
+  access_start: {year: 2028, month: 4, day: 1}    # ★要確認（運開2029年度から逆算の仮値）
+  trial_start: {year: 2029, month: 1, day: 1}
+  commercial_start: {year: 2029, month: 4, day: 1}
+  desired_voltage_kv: 22.0
+  reserve_line: 無
+  source_type: 蓄電池
+  rated_total_type: 蓄電池
+  rated_total_count: 4
+  rated_total_kw: 12000.0        # 公開値の定格出力に一致
+  received_power_max_kw: -12000.0  # 放電（送電）は負
+  received_power_min_kw: 12000.0   # 充電（受電）は正
+  house_load_max_kw: 150.0
+  house_load_max_pf: 95.0
+  house_load_min_kw: 50.0
+  house_load_min_pf: 95.0
+
+# --- 様式４の２ 受電設備 ---
+form4_2:
+  insulation_method: ガス絶縁
+  breaker_maker: ★要確認
+  breaker_model: VCB-24
+  breaker_voltage_kv: 24.0
+  breaker_current_a: 1200.0
+  breaker_breaking_ka: 25.0      # 短絡電流以上を確保
+  breaker_breaking_time: "3"
+  pfc_type: リアクトル付進相コンデンサ
+  pfc_capacity_ehv: 22kV　3,000kvar
+  pfc_capacity_total: 3,000kvar
+  pfc_auto_control: 有
+
+# --- 様式４の３ 監視制御 ---
+form4_3:
+  phone_line_form: 光通信ケーブル
+  phone_location: 発電設備等設置地点
+  info_line_form: 光通信ケーブル
+  info_device_type: ＣＤＴ方式
+  info_location: 発電設備等設置地点
+  monitoring_control: 随時監視制御方式
+
+# --- 様式５の５ 24時間運用パターン[kW]（00:00〜23:00）---
+# 系統用蓄電池: 深夜充電(負)、夕方ピーク放電(正)。約5.5Hの長時間運用
+demand_battery:
+  season: 通　年
+  # 放電(active_a): 夕方〜夜のピーク(17-22時)に放電（長時間）
+  active_a: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,12000,12000,12000,10000,8000,4000,0]
+  # 充電(active_b, 負): 深夜〜早朝(0-6時)と昼間余剰(11-14時)に充電
+  active_b: [-8000,-12000,-12000,-12000,-10000,-6000,0,0,0,0,0,-8000,-12000,-10000,0,0,0,0,0,0,0,0,0,-4000]
+
+# --- 配置図（PCS4台 + 蓄電池盤 + 受変電を自動配置）---
+layout:
+  site_width_m: 80.0
+  site_depth_m: 50.0
+  setback_m: 3.0
+  min_clearance_m: 2.0
+  auto_arrange: true
+  equipment:
+    - {name: 受変電設備, width_m: 14, depth_m: 8, category: 受変電}
+    - {name: 主変圧器, width_m: 8, depth_m: 8, category: 受変電}
+    - {name: 連系開閉器, width_m: 5, depth_m: 4, category: 受変電}
+    - {name: PCS-1, width_m: 6, depth_m: 3, category: 蓄電池}
+    - {name: PCS-2, width_m: 6, depth_m: 3, category: 蓄電池}
+    - {name: PCS-3, width_m: 6, depth_m: 3, category: 蓄電池}
+    - {name: PCS-4, width_m: 6, depth_m: 3, category: 蓄電池}
+    - {name: 蓄電池盤A, width_m: 14, depth_m: 3, category: 蓄電池}
+    - {name: 蓄電池盤B, width_m: 14, depth_m: 3, category: 蓄電池}
+    - {name: 蓄電池盤C, width_m: 14, depth_m: 3, category: 蓄電池}
